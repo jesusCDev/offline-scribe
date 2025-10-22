@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# Save Silent Scribe Docker image for distribution
+
+set -euo pipefail
+cd "$(dirname "$0")"
+
+# Detect if we need sudo for Docker
+DOCKER_CMD="docker"
+if ! docker ps >/dev/null 2>&1; then
+    if sudo docker ps >/dev/null 2>&1; then
+        DOCKER_CMD="sudo docker"
+    fi
+fi
+
+echo "💾 Saving Silent Scribe Docker Image"
+echo "====================================="
+echo ""
+echo "This will create a file you can copy to other machines."
+echo "The file will be about 27 GB in size."
+echo ""
+
+# Check if image exists
+if ! $DOCKER_CMD images silent-scribe:latest | grep -q silent-scribe; then
+    echo "❌ Image 'silent-scribe:latest' not found."
+    echo "   Please build it first: ./build"
+    exit 1
+fi
+
+# Save the image
+OUTPUT_FILE="silent-scribe-image.tar.gz"
+echo "📦 Saving image to: $OUTPUT_FILE"
+echo "   This will take several minutes..."
+echo ""
+
+$DOCKER_CMD save silent-scribe:latest | gzip > "$OUTPUT_FILE"
+
+if [ -f "$OUTPUT_FILE" ]; then
+    SIZE=$(du -h "$OUTPUT_FILE" | cut -f1)
+    echo ""
+    echo "✅ Success! Image saved to: $OUTPUT_FILE"
+    echo "   File size: $SIZE"
+    echo ""
+    echo "📋 Next steps:"
+    echo "   1. Copy $OUTPUT_FILE to the target machine"
+    echo "   2. On that machine, run: ./load"
+    echo "   3. Then run: ./start"
+else
+    echo "❌ Failed to save image"
+    exit 1
+fi

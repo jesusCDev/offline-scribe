@@ -1,32 +1,50 @@
 # 🤫 Silent Scribe - Air-Gapped Video Transcription
 
-A completely offline, air-gapped video-to-text transcription system with a web interface. Designed for sensitive data that requires maximum security with zero internet access.
+A completely offline, air-gapped video-to-text transcription system with AI-powered summarization. Designed for sensitive data that requires maximum security with zero internet access.
 
 ## ✨ Features
 
 - 🔒 **Completely Air-Gapped** - Runs with `--network none`, zero internet access at runtime
 - 🌐 **Web Interface** - Drag-and-drop video uploads with real-time progress
+- ✨ **AI Summarization** - Generate bullet points and paragraph summaries using Llama 2 7B
 - 🚀 **Dual Engines** - Choose between faster-whisper (Python) or whisper.cpp (C++)
-- 📦 **All Models Bundled** - Includes tiny, base, small, medium, and large-v3 models
+- 📦 **All Models Bundled** - Whisper models + Llama 2 7B (~27 GB total)
+- 💾 **Settings Persistence** - Your preferences are remembered across sessions
 - ⚙️ **Performance Tuning** - Adjust model size, compute type, threads, and more
-- 📝 **Multiple Formats** - Outputs TXT, SRT, and VTT subtitle formats
+- 📝 **Multiple Formats** - Outputs TXT, SRT, VTT, and AI-generated summaries
 - 💻 **Cross-Platform** - Works on Mac (Intel & Apple Silicon) and Linux
 
-## 🏗️ Architecture
+## 🏭 Architecture
 
-- **Backend**: FastAPI + Uvicorn
-- **Engines**: 
+- **Backend**: FastAPI + Uvicorn (single-worker for resource control)
+- **Transcription Engines**: 
   - faster-whisper (CTranslate2, CPU-optimized)
   - whisper.cpp (GGML, optimized for Apple Silicon)
-- **Models**: 5 sizes × 2 engines = 10 model variants (multi-language)
+- **Summarization**: Llama 2 7B Chat via llama.cpp (CPU-only)
+- **Models**: 
+  - Whisper: 5 sizes × 2 engines = 10 variants
+  - Llama: 1 quantized model (Q4_K_M, ~4 GB)
 - **Security**: No network access, non-root user, read-only filesystem (except /data)
+
+## 📚 Documentation
+
+- **[🎬 Demo](docs/DEMO.md)** - **START HERE!** Simple walkthrough for beginners
+- **[🚀 Quick Start](docs/QUICKSTART.md)** - Get started in 3 steps
+- **[🔧 Troubleshooting](docs/TROUBLESHOOTING.md)** - Solutions to common problems
+- **[⚠️ Edge Cases](docs/EDGE_CASES.md)** - How scripts handle edge cases automatically
+- **[🔗 User Flow](docs/USER_FLOW.md)** - Visual diagrams and flowcharts
+- **[📋 Implementation](docs/IMPLEMENTATION_SUMMARY.md)** - Architecture and technical details
+- **[✅ Test Checklist](docs/TEST_CHECKLIST.md)** - Comprehensive testing guide
 
 ## 📋 Requirements
 
 - **Docker** (or Docker Desktop for Mac)
-- **Disk Space**: ~15-20 GB for the image (all models included)
-- **RAM**: 8 GB minimum, 16 GB recommended for larger models
-- **CPU**: Multi-core recommended (single-process design)
+- **Disk Space**: ~30 GB free (final image is ~27 GB)
+- **RAM**: 
+  - 8 GB minimum for transcription only
+  - 16 GB recommended for transcription + summarization
+- **CPU**: Multi-core recommended (4+ cores ideal)
+- **Time**: First build takes 30-60 minutes (one-time setup)
 
 ## 🚀 Quick Start
 
@@ -39,22 +57,24 @@ A completely offline, air-gapped video-to-text transcription system with a web i
 
 2. **Build the Docker image** (this downloads and bundles all models):
    ```bash
-   make build
-   # or
-   ./scripts/build.sh
+   ./build
    ```
    
    ⚠️ **Note**: Building takes 30-60 minutes and requires ~15-20 GB disk space. This only needs to be done once.
 
-3. **Run the container**:
+3. **Start the application**:
    ```bash
-   make run
-   # or
-   ./scripts/run.sh
+   ./start
    ```
 
 4. **Open the web UI**:
    - Navigate to **http://localhost:7860** in your browser
+
+5. **Stop the application**:
+   ```bash
+   ./stop
+   # or just press Ctrl+C
+   ```
 
 ### Usage
 
@@ -83,12 +103,56 @@ A completely offline, air-gapped video-to-text transcription system with a web i
    - Watch the progress bar
    - When complete, view the transcript and download TXT/SRT/VTT files
 
-4. **Stop the Container**:
+4. **Generate AI Summary** (✨ NEW!)
+   - After transcription completes, click "✨ Generate Summary"
+   - Wait 30-90 seconds (depending on transcript length)
+   - View bullet points + paragraph summary in the Summary tab
+   - Download summary files separately
+
+5. **Stop the Container**:
    ```bash
    make stop
    # or
    ./scripts/stop.sh
+   # or just press Ctrl+C
    ```
+
+## ✨ AI Summarization (NEW!)
+
+Silent Scribe now includes local AI-powered summarization using Llama 2 7B Chat.
+
+### How It Works
+1. Complete a transcription first
+2. Click the "✨ Generate Summary" button
+3. Wait while the AI processes your transcript (30-90 seconds)
+4. Get two summary formats:
+   - **Bullet Points**: 5-10 key facts, decisions, and action items
+   - **Paragraph Summary**: 150-250 word overview
+
+### Features
+- 🔒 **Completely Offline**: Uses local Llama 2 model, no API calls
+- 🚀 **On-Demand**: Only generated when you click the button
+- 🧠 **Smart Chunking**: Handles long transcripts with map-reduce
+- 💾 **Persistent**: Summaries are saved and reload with the page
+- 🔒 **Concurrent-Safe**: Only one task (transcription OR summarization) runs at a time
+
+### Performance
+- **Short transcripts** (<1000 words): 15-30 seconds
+- **Medium transcripts** (1000-5000 words): 30-60 seconds  
+- **Long transcripts** (>5000 words): 60-120 seconds
+- Uses CPU only (works on all platforms)
+
+### Settings Persistence (🆕 NEW!)
+
+All your settings are now automatically saved:
+- Engine preference (faster-whisper/whisper.cpp)
+- Model size (tiny/base/small/medium/large-v3)
+- Compute type
+- Thread count
+- Language selection
+- Speaker detection preference
+
+**Default language changed to English** instead of auto-detect.
 
 ## 🔧 Advanced Usage
 
@@ -165,10 +229,17 @@ docker exec silent-scribe ping -c 1 google.com
   - ggml-medium.bin (~1.5 GB)
   - ggml-large-v3.bin (~3 GB)
 
+- **Llama 2 7B Chat** (✨ NEW! for summarization):
+  - llama-2-7b-chat.Q4_K_M.gguf (~4 GB, quantized)
+  - CPU-optimized with OpenBLAS
+  - Runs via llama.cpp (same as whisper.cpp)
+
 ### Output Formats
 - **TXT**: Plain text transcript
 - **SRT**: SubRip subtitle format (for video players)
 - **VTT**: WebVTT subtitle format (for web players)
+- **Summary (Bullets)**: AI-generated key points (✨ NEW!)
+- **Summary (Paragraph)**: AI-generated overview (✨ NEW!)
 
 ## 🐛 Troubleshooting
 
@@ -287,15 +358,21 @@ This is a self-contained, air-gapped application. Modifications should maintain:
 This project uses the following open-source components:
 - faster-whisper (MIT License)
 - whisper.cpp (MIT License)
+- llama.cpp (MIT License)
 - FastAPI (MIT License)
 - OpenAI Whisper models (MIT License)
+- Llama 2 (Meta's Llama 2 Community License Agreement)
+
+**Note on Llama 2 Usage**: This project uses Llama 2 for offline summarization. The model is downloaded at build time and runs completely locally. Usage complies with Meta's license for internal tooling and offline applications.
 
 ## 🙏 Credits
 
 Built on top of excellent open-source projects:
 - [faster-whisper](https://github.com/guillaumekln/faster-whisper) by Guillaume Klein
-- [whisper.cpp](https://github.com/ggerganov/whisper.cpp) by Georgi Gerganov
+- [whisper.cpp](https://github.com/ggerganov/whisper.cpp) by Georgi Gerganov  
+- [llama.cpp](https://github.com/ggerganov/llama.cpp) by Georgi Gerganov
 - [OpenAI Whisper](https://github.com/openai/whisper) by OpenAI
+- [Llama 2](https://ai.meta.com/llama/) by Meta AI
 
 ---
 

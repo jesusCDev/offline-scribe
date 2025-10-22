@@ -1,16 +1,8 @@
 #!/usr/bin/env bash
-# Build Silent Scribe Docker image
+# Build Silent Scribe - Simple wrapper for scripts/build.sh
 
 set -euo pipefail
 cd "$(dirname "$0")"
 
-echo "🚀 Building Silent Scribe..."
-echo "⚠️  This will take 30-60 minutes if downloading models"
-echo ""
-
-sudo docker build -t silent-scribe:latest -f docker/Dockerfile .
-
-echo ""
-echo "✅ Build complete!"
-echo ""
-echo "Run with: ./start"
+# Just call the full script
+exec ./scripts/build.sh

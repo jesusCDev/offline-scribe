@@ -1,22 +1,8 @@
 #!/usr/bin/env bash
-# Start Silent Scribe
+# Start Silent Scribe - Simple wrapper for scripts/run.sh
 
 set -euo pipefail
 cd "$(dirname "$0")"
 
-echo "🚀 Starting Silent Scribe..."
-echo "🔒 Running in air-gapped mode (--network none)"
-echo "🌐 Web UI: http://localhost:7860"
-echo ""
-echo "Press Ctrl+C to stop"
-echo ""
-
-mkdir -p data/uploads data/results
-chmod -R 777 data/
-
-sudo docker run --rm -it \
-  -p 7860:7860 \
-  -v "$(pwd)/data:/data:z" \
-  --name silent-scribe \
-  --network none \
-  silent-scribe:latest
+# Just call the full script
+exec ./scripts/run.sh

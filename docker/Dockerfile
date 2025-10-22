@@ -35,6 +35,17 @@ RUN git clone --depth=1 --branch=v1.5.4 https://github.com/ggerganov/whisper.cpp
     cd whisper.cpp && \
     make -j$(nproc)
 
+# Stage 2.5: Build llama.cpp
+FROM base-builder AS llamacpp-builder
+
+WORKDIR /opt
+RUN git clone --depth=1 --branch=b3864 https://github.com/ggerganov/llama.cpp.git && \
+    cd llama.cpp && \
+    cmake -B build -S . -DLLAMA_OPENBLAS=ON -DCMAKE_BUILD_TYPE=Release && \
+    cmake --build build --config Release -j$(nproc) && \
+    mkdir -p /usr/local/bin/llama && \
+    cp build/bin/llama-cli /usr/local/bin/llama/llama-cli 2>/dev/null || cp build/bin/main /usr/local/bin/llama/llama-cli
+
 # Stage 3: Fetch all models (or use local if available)
 FROM base-builder AS model-fetcher
 
@@ -48,11 +59,15 @@ RUN mkdir -p /opt/models
 # Copy local models if they exist (will be empty if not present)
 COPY resources/models /opt/models_local
 
-# Fetch missing models (this requires network access at build time if models not local)
-RUN if [ -n "$(ls -A /opt/models_local 2>/dev/null)" ]; then \
-        echo "Using local models from resources/models/"; \
-        cp -r /opt/models_local/* /opt/models/ 2>/dev/null || true; \
-    fi && \
+# Accept HF_TOKEN as build arg for pyannote model download
+ARG HF_TOKEN
+ENV HF_TOKEN=${HF_TOKEN}
+
+# Cache busting arg to force rebuild when needed
+ARG CACHEBUST=1
+
+# Copy any local models first (if they exist), then fetch missing ones
+RUN cp -r /opt/models_local/* /opt/models/ 2>/dev/null || true && \
     python3 /tmp/fetch_models.py --skip-existing
 
 # Stage 4: Final runtime image
@@ -72,6 +87,12 @@ COPY --from=base-builder /usr/local/bin /usr/local/bin
 # Copy whisper.cpp binary
 COPY --from=whispercpp-builder /opt/whisper.cpp/main /opt/whisper.cpp/main
 
+# Copy llama.cpp binary and libraries
+COPY --from=llamacpp-builder /usr/local/bin/llama/llama-cli /usr/local/bin/llama/llama-cli
+COPY --from=llamacpp-builder /opt/llama.cpp/build/src/libllama.so /usr/local/lib/libllama.so
+COPY --from=llamacpp-builder /opt/llama.cpp/build/ggml/src/libggml.so /usr/local/lib/libggml.so
+RUN ldconfig
+
 # Copy all pre-downloaded models
 COPY --from=model-fetcher /opt/models /opt/models
 
@@ -82,7 +103,7 @@ COPY .env.example /.env
 # Create non-root user
 RUN useradd -m -u 1000 appuser && \
     mkdir -p /data/uploads /data/results && \
-    chown -R appuser:appuser /data /app
+    chown -R appuser:appuser /data /app /opt/models
 
 # Set environment variables for offline mode
 ENV HF_HUB_OFFLINE=1

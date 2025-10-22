@@ -6,6 +6,12 @@ from faster_whisper import WhisperModel
 import srt
 import webvtt
 
+try:
+    from ..diarization import perform_diarization, merge_transcription_with_speakers, format_transcript_with_speakers
+    DIARIZATION_AVAILABLE = True
+except ImportError:
+    DIARIZATION_AVAILABLE = False
+
 class FasterWhisperEngine:
     """Adapter for faster-whisper transcription."""
     
@@ -36,6 +42,7 @@ class FasterWhisperEngine:
         temperature = settings.get("temperature", 0.0)
         vad_filter = settings.get("vad_filter", True)
         language = settings.get("language")
+        diarization_enabled = settings.get("diarization", False)
         
         # Get audio duration for progress estimation
         try:
@@ -43,14 +50,28 @@ class FasterWhisperEngine:
         except:
             duration = None
         
-        # Load model (path only, no network)
-        model_obj = WhisperModel(
-            str(model_path),
-            device="cpu",
-            compute_type=compute_type,
-            cpu_threads=threads,
-            num_workers=1
-        )
+        # Load model with fallback for compute type
+        # Try the requested compute type first, fall back to int8 if not supported
+        try:
+            model_obj = WhisperModel(
+                str(model_path),
+                device="cpu",
+                compute_type=compute_type,
+                cpu_threads=threads,
+                num_workers=1
+            )
+        except (ValueError, RuntimeError) as e:
+            if "compute type" in str(e).lower():
+                # Fallback to int8 which is widely supported
+                model_obj = WhisperModel(
+                    str(model_path),
+                    device="cpu",
+                    compute_type="int8",
+                    cpu_threads=threads,
+                    num_workers=1
+                )
+            else:
+                raise
         
         # Transcribe with progress tracking
         segments_list = []
@@ -74,14 +95,27 @@ class FasterWhisperEngine:
                     progress_callback(min(progress, 99))
                     last_progress = progress
         
+        # Perform speaker diarization if requested
+        speaker_segments = None
+        if diarization_enabled and DIARIZATION_AVAILABLE:
+            progress_callback(95)
+            speaker_segments = perform_diarization(audio_path)
+            if speaker_segments:
+                segments_list = merge_transcription_with_speakers(segments_list, speaker_segments)
+        
         # Generate outputs
         outputs = {}
         
-        # Plain text
+        # Plain text (with speaker labels if diarization was used)
         txt_path = output_dir / "transcript.txt"
         with open(txt_path, "w", encoding="utf-8") as f:
-            for seg in segments_list:
-                f.write(seg.text.strip() + "\n")
+            if diarization_enabled and speaker_segments:
+                # Format with speaker labels
+                f.write(format_transcript_with_speakers(segments_list, include_speakers=True))
+            else:
+                # Regular format without speakers
+                for seg in segments_list:
+                    f.write(seg.text.strip() + "\n")
         outputs["txt"] = txt_path
         
         # SRT subtitles

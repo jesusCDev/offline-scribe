@@ -9,7 +9,7 @@ class Settings(BaseSettings):
     app_port: int = 7860
     default_engine: str = "faster-whisper"
     default_model: str = "small"
-    default_compute_type: str = "int8_float16"
+    default_compute_type: str = "int8"  # Most compatible option
     default_threads: int = os.cpu_count() or 4
     results_keep_days: int = 30
     max_upload_size_mb: int = 2000
@@ -33,6 +33,14 @@ class Settings(BaseSettings):
         case_sensitive = False
 
 settings = Settings()
+
+# Llama paths for summarization
+LLAMA_BIN = Path("/usr/local/bin/llama/llama-cli")
+LLAMA_MODEL_DIR = Path("/opt/models/llama")
+LLAMA_MODEL_PATH = LLAMA_MODEL_DIR / "llama-2-7b-chat.Q4_K_M.gguf"
+
+# Check if summarization is available
+SUMMARIZATION_AVAILABLE = LLAMA_BIN.exists() and LLAMA_MODEL_PATH.exists()
 
 # Available options for UI
 AVAILABLE_ENGINES = ["faster-whisper", "whisper.cpp"]

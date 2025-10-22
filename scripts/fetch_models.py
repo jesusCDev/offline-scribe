@@ -7,11 +7,13 @@ import os
 import sys
 import shutil
 from pathlib import Path
-from huggingface_hub import hf_hub_download, snapshot_download
+from huggingface_hub import hf_hub_download, snapshot_download, login
 
 MODELS_BASE = Path("/opt/models")
 FW_BASE = MODELS_BASE / "faster_whisper"
 WC_BASE = MODELS_BASE / "whisper_cpp"
+PYANNOTE_BASE = MODELS_BASE / "pyannote"
+LLAMA_BASE = MODELS_BASE / "llama"
 
 # Model sizes to download
 SIZES = ["tiny", "base", "small", "medium", "large-v3"]
@@ -77,6 +79,89 @@ def fetch_whisper_cpp_models():
             print(f"    ✗ Failed: {e}")
             sys.exit(1)
 
+def fetch_pyannote_models(skip_existing=False):
+    """Download pyannote speaker diarization models."""
+    print("\n📦 Fetching pyannote models...")
+    
+    # Check if already exists
+    target = PYANNOTE_BASE / "speaker-diarization-3.1"
+    if skip_existing and target.exists() and any(target.iterdir()):
+        print(f"  ⚡ Model already exists at {target}, skipping")
+        return True
+    
+    # Login with HF token if available (required for gated models)
+    hf_token = os.environ.get("HF_TOKEN")
+    if not hf_token:
+        print("  ⚠️  No HF_TOKEN found, skipping pyannote models (diarization will be disabled)")
+        return False
+    
+    try:
+        login(token=hf_token)
+        print("  ✓ Authenticated with Hugging Face")
+    except Exception as e:
+        print(f"  ✗ Authentication failed: {e}")
+        print("  ⚠️  Skipping pyannote models (diarization will be disabled)")
+        return False
+    
+    PYANNOTE_BASE.mkdir(parents=True, exist_ok=True)
+    
+    # Download speaker diarization pipeline and its dependencies
+    # Keep them in HF cache format so pyannote can load them properly
+    models_to_download = [
+        "pyannote/speaker-diarization-3.1",
+        "pyannote/segmentation-3.0",
+        "pyannote/wespeaker-voxceleb-resnet34-LM"
+    ]
+    
+    for model_name in models_to_download:
+        print(f"  - Downloading {model_name}...")
+        
+        try:
+            # Download directly to the pyannote cache directory
+            # This keeps the HF cache structure that pyannote expects
+            snapshot_download(
+                repo_id=model_name,
+                cache_dir=str(PYANNOTE_BASE)
+            )
+            print(f"    ✓ Cached {model_name}")
+        except Exception as e:
+            print(f"    ✗ Failed: {e}")
+            print("  ⚠️  Diarization will be disabled")
+            return False
+    
+    return True
+
+def fetch_llama2_chat_model(skip_existing=False):
+    """Download Llama 2 7B Chat GGUF model for summarization."""
+    print("\n📦 Fetching Llama 2 7B Chat model...")
+    
+    LLAMA_BASE.mkdir(parents=True, exist_ok=True)
+    target_file = LLAMA_BASE / "llama-2-7b-chat.Q4_K_M.gguf"
+    
+    # Check if already exists
+    if skip_existing and target_file.exists():
+        size_mb = target_file.stat().st_size / (1024 * 1024)
+        print(f"  ⚡ Model already exists at {target_file} ({size_mb:.1f} MB), skipping")
+        return True
+    
+    print(f"  - Downloading llama-2-7b-chat.Q4_K_M.gguf...")
+    
+    try:
+        file_path = hf_hub_download(
+            repo_id="TheBloke/Llama-2-7B-Chat-GGUF",
+            filename="llama-2-7b-chat.Q4_K_M.gguf",
+            cache_dir="/tmp/llama_cache"
+        )
+        
+        shutil.copy2(file_path, target_file)
+        size_mb = target_file.stat().st_size / (1024 * 1024)
+        print(f"    ✓ Saved to {target_file} ({size_mb:.1f} MB)")
+        return True
+    except Exception as e:
+        print(f"    ✗ Failed: {e}")
+        print("  ⚠️  Summarization feature will be disabled")
+        return False
+
 def verify_models():
     """Verify all models are present."""
     print("\n🔍 Verifying models...")
@@ -125,5 +210,20 @@ if __name__ == "__main__":
     
     fetch_faster_whisper_models()
     fetch_whisper_cpp_models()
+    pyannote_available = fetch_pyannote_models(skip_existing=skip_existing)
+    llama_available = fetch_llama2_chat_model(skip_existing=skip_existing)
     verify_models()
-    print("\n✅ All models fetched successfully!")
+    
+    features = []
+    if pyannote_available:
+        features.append("diarization")
+    if llama_available:
+        features.append("summarization")
+    
+    print("\n✅ Whisper models fetched successfully!")
+    if features:
+        print(f"✅ Optional features available: {', '.join(features)}")
+    if not pyannote_available:
+        print("⚠️  Diarization models skipped - feature will be disabled")
+    if not llama_available:
+        print("⚠️  Llama model skipped - summarization feature will be disabled")

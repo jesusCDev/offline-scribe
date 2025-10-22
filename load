@@ -1,0 +1,109 @@
+#!/usr/bin/env bash
+# Load pre-built Silent Scribe Docker image
+
+set -euo pipefail
+cd "$(dirname "$0")"
+
+# Detect if we need sudo for Docker
+DOCKER_CMD="docker"
+if ! docker ps >/dev/null 2>&1; then
+    if sudo docker ps >/dev/null 2>&1; then
+        DOCKER_CMD="sudo docker"
+        echo "ℹ️  Note: Using 'sudo' for Docker commands (you may be prompted for password)"
+        echo ""
+    fi
+fi
+
+echo "📦 Loading Silent Scribe Docker Image"
+echo "======================================"
+echo ""
+
+# Check if Docker is running
+echo "🔍 Checking Docker..."
+if ! $DOCKER_CMD info >/dev/null 2>&1; then
+    echo "⚠️  Docker is not running. Attempting to start it..."
+    echo ""
+    
+    # Try systemctl (Linux)
+    if command -v systemctl >/dev/null 2>&1; then
+        echo "🔑 Starting Docker requires administrator access (you may be asked for your password)"
+        sudo systemctl start docker 2>/dev/null && {
+            sleep 2
+            if $DOCKER_CMD info >/dev/null 2>&1; then
+                echo "✓ Docker started successfully"
+            else
+                echo "❌ Failed to start Docker automatically."
+                echo "   Please start Docker manually: sudo systemctl start docker"
+                exit 1
+            fi
+        } || {
+            echo "❌ Could not start Docker."
+            echo "   Please start Docker manually and run this script again."
+            exit 1
+        }
+    # Mac with Docker Desktop
+    elif [[ "$OSTYPE" == "darwin"* ]]; then
+        echo "   Opening Docker Desktop..."
+        open -a Docker 2>/dev/null && {
+            echo "   Waiting for Docker to start (this may take 10-30 seconds)..."
+            for i in {1..30}; do
+                if $DOCKER_CMD info >/dev/null 2>&1; then
+                    echo "✓ Docker started successfully"
+                    break
+                fi
+                sleep 1
+                echo -n "."
+            done
+            if ! $DOCKER_CMD info >/dev/null 2>&1; then
+                echo ""
+                echo "❌ Docker Desktop is starting but not ready yet."
+                echo "   Please wait a moment and run this script again."
+                exit 1
+            fi
+        } || {
+            echo "❌ Could not open Docker Desktop."
+            echo "   Please open it manually from Applications."
+            exit 1
+        }
+    else
+        echo "❌ Docker is not running. Please start it manually."
+        exit 1
+    fi
+else
+    echo "✓ Docker is running"
+fi
+
+echo ""
+
+# Look for the image file
+IMAGE_FILE="silent-scribe-image.tar.gz"
+
+if [ ! -f "$IMAGE_FILE" ]; then
+    echo "❌ Image file not found: $IMAGE_FILE"
+    echo ""
+    echo "Please make sure you have copied the $IMAGE_FILE file"
+    echo "to this directory before running ./load"
+    echo ""
+    echo "If you need to create it, run ./save-image on the machine"
+    echo "where you built Silent Scribe."
+    exit 1
+fi
+
+SIZE=$(du -h "$IMAGE_FILE" | cut -f1)
+echo "📦 Found image file: $IMAGE_FILE ($SIZE)"
+echo "⏳ Loading image into Docker (this will take several minutes)..."
+echo ""
+
+# Load the image
+if gunzip -c "$IMAGE_FILE" | $DOCKER_CMD load; then
+    echo ""
+    echo "✅ Success! Silent Scribe image loaded."
+    echo ""
+    echo "You can now run: ./start"
+    echo ""
+    echo "💡 Tip: You can delete $IMAGE_FILE to free up space."
+else
+    echo ""
+    echo "❌ Failed to load image"
+    exit 1
+fi

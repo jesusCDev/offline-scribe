@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silent Scribe - Instructions</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section h2 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .section h3 {
+            color: #764ba2;
+            font-size: 1.3em;
+            margin: 20px 0 10px 0;
+        }
+        
+        .step {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 30px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .code-block {
+            position: relative;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 14px;
+        }
+        
+        .code-block code {
+            display: block;
+            padding-right: 60px;
+        }
+        
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .copy-btn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+        
+        .copy-btn.copied {
+            background: #28a745;
+        }
+        
+        .note {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .note strong {
+            color: #856404;
+        }
+        
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+            color: #155724;
+        }
+        
+        ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        
+        ul li {
+            margin-bottom: 8px;
+        }
+        
+        .emoji {
+            font-size: 1.3em;
+            margin-right: 5px;
+        }
+        
+        a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤫 Silent Scribe</h1>
+            <p>Air-Gapped Video Transcription with AI Summarization</p>
+        </div>
+        
+        <div class="content">
+            <!-- Quick Start -->
+            <div class="section">
+                <h2>🚀 Quick Start</h2>
+                
+                <div class="step">
+                    <h3><span class="step-number">1</span> Install Docker Desktop</h3>
+                    <p>Download and install Docker Desktop from <a href="https://www.docker.com/products/docker-desktop" target="_blank">docker.com</a></p>
+                    <p style="margin-top: 10px;"><strong>Mac:</strong> Download, install, and launch Docker Desktop. Wait for it to start (you'll see the Docker icon in your menu bar).</p>
+                </div>
+                
+                <div class="step">
+                    <h3><span class="step-number">2</span> Open Terminal</h3>
+                    <p><strong>Mac:</strong> Applications → Utilities → Terminal</p>
+                    <p style="margin-top: 10px;">Navigate to the Silent Scribe folder:</p>
+                    <div class="code-block">
+                        <code>cd /path/to/silent-scribe</code>
+                        <button class="copy-btn" onclick="copyCode(this, 'cd /path/to/silent-scribe')">Copy</button>
+                    </div>
+                    <div class="note">
+                        <strong>Note:</strong> Replace <code>/path/to/silent-scribe</code> with the actual location where you copied the folder.
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <h3><span class="step-number">3</span> Load the Image</h3>
+                    <p>If you received <code>silent-scribe-image.tar.gz</code>, load it:</p>
+                    <div class="code-block">
+                        <code>./load</code>
+                        <button class="copy-btn" onclick="copyCode(this, './load')">Copy</button>
+                    </div>
+                    <p style="margin-top: 10px;">This takes 5-10 minutes. Wait for it to complete.</p>
+                    
+                    <p style="margin-top: 15px;"><strong>OR</strong> if building from scratch (30-60 minutes):</p>
+                    <div class="code-block">
+                        <code>./build</code>
+                        <button class="copy-btn" onclick="copyCode(this, './build')">Copy</button>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <h3><span class="step-number">4</span> Start the Application</h3>
+                    <div class="code-block">
+                        <code>./start</code>
+                        <button class="copy-btn" onclick="copyCode(this, './start')">Copy</button>
+                    </div>
+                    <div class="success">
+                        ✅ Open your browser to: <a href="http://localhost:7860" target="_blank"><strong>http://localhost:7860</strong></a>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <h3><span class="step-number">5</span> Stop the Application</h3>
+                    <p>When you're done, press <strong>Ctrl+C</strong> in the terminal.</p>
+                    <p style="margin-top: 10px;">The container will automatically clean up. No other steps needed!</p>
+                </div>
+            </div>
+            
+            <!-- Using the App -->
+            <div class="section">
+                <h2>📝 Using Silent Scribe</h2>
+                
+                <h3>Transcribe a Video</h3>
+                <ul>
+                    <li>Drag and drop a video file onto the upload area</li>
+                    <li>Choose your settings (or use defaults)</li>
+                    <li>Click "Start Transcription"</li>
+                    <li>Wait for completion</li>
+                    <li>Download TXT, SRT, or VTT files</li>
+                </ul>
+                
+                <h3>Generate AI Summary</h3>
+                <ul>
+                    <li>After transcription completes, click "✨ Generate Summary"</li>
+                    <li>Wait 30-90 seconds</li>
+                    <li>View bullet points and paragraph summary</li>
+                    <li>Download summary files</li>
+                </ul>
+                
+                <div class="note">
+                    <strong>💡 Tip:</strong> All your settings are automatically saved for next time!
+                </div>
+            </div>
+            
+            <!-- Troubleshooting -->
+            <div class="section">
+                <h2>🔧 Troubleshooting</h2>
+                
+                <h3>"Permission denied" when running ./load or ./start</h3>
+                <p>Make the scripts executable:</p>
+                <div class="code-block">
+                    <code>chmod +x load start build</code>
+                    <button class="copy-btn" onclick="copyCode(this, 'chmod +x load start build')">Copy</button>
+                </div>
+                
+                <h3>"Docker is not running"</h3>
+                <p>Open Docker Desktop from your Applications folder and wait for it to start.</p>
+                
+                <h3>Can't access http://localhost:7860</h3>
+                <ul>
+                    <li>Make sure the terminal shows "Starting Silent Scribe"</li>
+                    <li>Check that Docker Desktop is running</li>
+                    <li>Try refreshing your browser</li>
+                    <li>Use <code>http://</code> not <code>https://</code></li>
+                </ul>
+                
+                <h3>Need more help?</h3>
+                <p>Check the <code>docs/TROUBLESHOOTING.md</code> file for detailed solutions.</p>
+            </div>
+            
+            <!-- Features -->
+            <div class="section">
+                <h2>✨ Features</h2>
+                <ul>
+                    <li><span class="emoji">🔒</span> <strong>100% Offline</strong> - No internet needed after setup</li>
+                    <li><span class="emoji">🤖</span> <strong>AI Summarization</strong> - Automatic bullet points and paragraph summaries</li>
+                    <li><span class="emoji">📝</span> <strong>Multiple Formats</strong> - TXT, SRT, VTT subtitle files</li>
+                    <li><span class="emoji">💾</span> <strong>Settings Saved</strong> - Your preferences remembered</li>
+                    <li><span class="emoji">🎯</span> <strong>Easy to Use</strong> - Simple drag-and-drop interface</li>
+                    <li><span class="emoji">🔐</span> <strong>Secure</strong> - All processing happens locally on your machine</li>
+                </ul>
+            </div>
+            
+            <!-- Quick Reference -->
+            <div class="section">
+                <h2>📚 Quick Reference</h2>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>Command</strong></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><strong>What it does</strong></td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><code>./load</code></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Load pre-built image (5-10 min)</td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><code>./build</code></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Build from scratch (30-60 min)</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 10px; border: 1px solid #ddd;"><code>./start</code></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Start the application</td>
+                    </tr>
+                    <tr style="background: #f8f9fa;">
+                        <td style="padding: 10px; border: 1px solid #ddd;"><code>Ctrl+C</code></td>
+                        <td style="padding: 10px; border: 1px solid #ddd;">Stop the application</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function copyCode(button, text) {
+            navigator.clipboard.writeText(text).then(function() {
+                const originalText = button.textContent;
+                button.textContent = 'Copied!';
+                button.classList.add('copied');
+                
+                setTimeout(function() {
+                    button.textContent = originalText;
+                    button.classList.remove('copied');
+                }, 2000);
+            }).catch(function(err) {
+                alert('Failed to copy: ' + err);
+            });
+        }
+    </script>
+</body>
+</html>

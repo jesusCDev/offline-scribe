@@ -247,6 +247,258 @@
             margin-top: 10px;
         }
         
+        .history-section {
+            margin-top: 30px;
+            border-top: 2px solid #ecf0f1;
+            padding-top: 30px;
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .history-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .search-box {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 250px;
+        }
+        
+        .history-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s;
+        }
+        
+        .history-item.search-match {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+        }
+        
+        .history-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        
+        .history-item-header:hover {
+            background: #ecf0f1;
+            margin: -5px -10px 10px -10px;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        
+        .history-item-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .history-item-content {
+            display: block;
+        }
+        
+        .history-item-content.collapsed {
+            display: none;
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        
+        .btn-delete:hover {
+            background: #c82333;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+        
+        .collapse-icon {
+            transition: transform 0.3s;
+            display: inline-block;
+        }
+        
+        .collapse-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        .format-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .format-tab {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #7f8c8d;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .format-tab:hover {
+            color: #3498db;
+        }
+        
+        .format-tab.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+        
+        .format-content {
+            display: none;
+        }
+        
+        .format-content.active {
+            display: block;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+        }
+        
+        .speaker-detection-box {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .speaker-detection-box input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            margin-top: 2px;
+        }
+        
+        .speaker-detection-content {
+            flex: 1;
+        }
+        
+        .speaker-detection-content label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+        
+        .speaker-detection-content .description {
+            font-size: 13px;
+            color: #5a6c7d;
+            line-height: 1.4;
+        }
+        
+        .btn-generate-summary {
+            background: #9c27b0;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-generate-summary:hover:not(:disabled) {
+            background: #7b1fa2;
+        }
+        
+        .btn-generate-summary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .summary-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #ffffff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .summary-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        
+        .summary-section h4 {
+            margin: 0 0 10px 0;
+            color: #9c27b0;
+            font-size: 14px;
+        }
+        
+        .summary-section .summary-text {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-size: 13px;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
         .info-box {
             background: #fff3cd;
             border-left: 4px solid #ffc107;
@@ -297,9 +549,9 @@
             
             <div class="setting-group" id="computeTypeGroup">
                 <label for="computeType" title="How the computer processes the audio. Different settings trade speed for accuracy.">Compute Type</label>
-                <select id="computeType" title="int8: Fastest but less precise. int8_float16: Good balance (recommended). float32: Most precise but slowest.">
-                    <option value="int8">int8 (fastest)</option>
-                    <option value="int8_float16" selected>int8_float16 (recommended)</option>
+                <select id="computeType" title="int8: Best compatibility, fast. int8_float16: Better quality if supported. float32: Most precise but slowest.">
+                    <option value="int8" selected>int8 (recommended)</option>
+                    <option value="int8_float16">int8_float16</option>
                     <option value="int16">int16</option>
                     <option value="float32">float32 (most accurate)</option>
                 </select>
@@ -330,6 +582,16 @@
             </div>
         </div>
         
+        <div class="speaker-detection-box">
+            <input type="checkbox" id="diarization">
+            <div class="speaker-detection-content">
+                <label for="diarization">🎭 Speaker Detection</label>
+                <div class="description">
+                    Identify and distinguish multiple speakers in the audio. This feature is more accurate but uses significantly more CPU and memory, and takes 2-3x longer to process.
+                </div>
+            </div>
+        </div>
+        
         <button id="transcribeBtn" class="btn btn-primary" disabled>Start Transcription</button>
         
         <div id="status" class="status">
@@ -341,6 +603,20 @@
         </div>
         
         <div id="results" class="results"></div>
+        
+        <div class="history-section">
+            <div class="history-header">
+                <h2>📚 Transcription History</h2>
+                <div class="history-controls">
+                    <input type="text" id="searchHistory" class="search-box" placeholder="🔍 Search filename or content...">
+                    <button id="collapseAll" class="btn btn-small">📉 Collapse All</button>
+                    <button id="expandAll" class="btn btn-small">📈 Expand All</button>
+                    <button id="deleteAll" class="btn btn-delete btn-small">🗑️ Delete All</button>
+                    <button id="refreshHistory" class="btn btn-small">🔄 Refresh</button>
+                </div>
+            </div>
+            <div id="history" class="history"></div>
+        </div>
     </div>
     
     <script>
@@ -362,6 +638,41 @@
         const threadsSlider = document.getElementById('threads');
         const threadsValue = document.getElementById('threadsValue');
         
+        // Settings persistence
+        const SETTINGS_KEY = 'silentScribe.settings';
+        
+        function saveSettings() {
+            const settings = {
+                engine: document.getElementById('engine').value,
+                model: document.getElementById('model').value,
+                computeType: document.getElementById('computeType').value,
+                threads: document.getElementById('threads').value,
+                language: document.getElementById('language').value,
+                diarization: document.getElementById('diarization').checked
+            };
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        }
+        
+        function loadSettings() {
+            try {
+                const saved = localStorage.getItem(SETTINGS_KEY);
+                if (saved) {
+                    const settings = JSON.parse(saved);
+                    if (settings.engine) document.getElementById('engine').value = settings.engine;
+                    if (settings.model) document.getElementById('model').value = settings.model;
+                    if (settings.computeType) document.getElementById('computeType').value = settings.computeType;
+                    if (settings.threads) {
+                        document.getElementById('threads').value = settings.threads;
+                        threadsValue.textContent = settings.threads;
+                    }
+                    if (settings.language) document.getElementById('language').value = settings.language;
+                    if (settings.diarization !== undefined) document.getElementById('diarization').checked = settings.diarization;
+                }
+            } catch (error) {
+                console.error('Failed to load settings:', error);
+            }
+        }
+        
         // Load config on page load
         async function loadConfig() {
             try {
@@ -373,9 +684,25 @@
                 threadsSlider.max = config.defaults.max_threads;
                 threadsSlider.value = config.defaults.threads;
                 threadsValue.textContent = config.defaults.threads;
+                
+                // Set language default to English
+                document.getElementById('language').value = config.defaults.language || 'en';
+                
+                // Load saved settings (will override defaults)
+                loadSettings();
             } catch (error) {
                 console.error('Failed to load config:', error);
             }
+        }
+        
+        // Save settings on change
+        function attachSettingsListeners() {
+            ['engine', 'model', 'computeType', 'threads', 'language', 'diarization'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('change', saveSettings);
+                }
+            });
         }
         
         // Update threads value display
@@ -385,6 +712,25 @@
         
         // Load config when page loads
         loadConfig();
+        
+        // Attach settings listeners
+        attachSettingsListeners();
+        
+        // Load history when page loads
+        loadHistory();
+        
+        // Refresh history button
+        document.getElementById('refreshHistory').addEventListener('click', loadHistory);
+        
+        // Search history
+        document.getElementById('searchHistory').addEventListener('input', filterHistory);
+        
+        // Collapse/Expand all
+        document.getElementById('collapseAll').addEventListener('click', () => toggleAllItems(true));
+        document.getElementById('expandAll').addEventListener('click', () => toggleAllItems(false));
+        
+        // Delete all
+        document.getElementById('deleteAll').addEventListener('click', deleteAllHistory);
         
         // Toggle compute type visibility based on engine
         engine.addEventListener('change', () => {
@@ -453,6 +799,7 @@
             formData.append('compute_type', document.getElementById('computeType').value);
             formData.append('threads', document.getElementById('threads').value);
             formData.append('language', document.getElementById('language').value);
+            formData.append('diarization', document.getElementById('diarization').checked ? 'true' : 'false');
             formData.append('beam_size', '5');
             formData.append('temperature', '0.0');
             formData.append('vad_filter', 'true');
@@ -471,8 +818,8 @@
                 const data = await response.json();
                 currentJobId = data.job_id;
                 
-                // Start polling
-                pollingInterval = setInterval(checkJobStatus, 2000);
+                // Start polling more frequently for better progress updates
+                pollingInterval = setInterval(checkJobStatus, 500);
                 checkJobStatus();
                 
             } catch (error) {
@@ -488,7 +835,20 @@
                 const job = await response.json();
                 
                 progressFill.style.width = `${job.progress}%`;
-                statusDetails.textContent = `${job.engine} | ${job.model} | ${job.progress}%`;
+                
+                // Update status message based on progress
+                let statusMsg = '';
+                if (job.progress < 10) {
+                    statusMsg = '🎬 Extracting audio from video...';
+                } else if (job.progress < 15) {
+                    statusMsg = '🤖 Loading AI model...';
+                } else if (job.progress < 99) {
+                    statusMsg = `🎙️ Transcribing audio... ${job.progress}%`;
+                } else {
+                    statusMsg = '✨ Finalizing transcription...';
+                }
+                statusText.textContent = statusMsg;
+                statusDetails.textContent = `Engine: ${job.engine} | Model: ${job.model}`;
                 
                 if (job.status === 'completed') {
                     clearInterval(pollingInterval);
@@ -561,6 +921,386 @@
             fileName.style.display = 'none';
             fileInput.value = '';
             currentJobId = null;
+        }
+        
+        // Load transcription history
+        async function loadHistory() {
+            try {
+                const response = await fetch('/api/history?limit=10');
+                const jobs = await response.json();
+                
+                const historyDiv = document.getElementById('history');
+                
+                if (jobs.length === 0) {
+                    historyDiv.innerHTML = '<p style="color: #7f8c8d; text-align: center;">No transcriptions yet. Upload a video to get started!</p>';
+                    return;
+                }
+                
+                historyDiv.innerHTML = jobs.map(job => createHistoryItem(job)).join('');
+                
+                // Attach tab switching events
+                document.querySelectorAll('.format-tab').forEach(tab => {
+                    tab.addEventListener('click', switchFormat);
+                });
+                
+            } catch (error) {
+                console.error('Failed to load history:', error);
+            }
+        }
+        
+        function createHistoryItem(job) {
+            const date = new Date(job.created_at).toLocaleString();
+            const statusBadge = job.status === 'completed' ? '✅' : 
+                               job.status === 'failed' ? '❌' : '⏳';
+            
+            let content = `
+                <div class="history-item" data-job-id="${job.job_id}" data-filename="${job.filename.toLowerCase()}">
+                    <div class="history-item-header" onclick="toggleItem('${job.job_id}')">
+                        <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                            <span class="collapse-icon collapsed" id="icon-${job.job_id}">▼</span>
+                            <div>
+                                <strong>${statusBadge} ${job.filename}</strong>
+                                <div style="font-size: 12px; color: #7f8c8d; margin-top: 3px;">
+                                    ${date} | ${job.engine} | ${job.model}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="history-item-actions" onclick="event.stopPropagation()">
+                            <button class="btn-delete" onclick="deleteJob('${job.job_id}')">🗑️ Delete</button>
+                        </div>
+                    </div>
+                    <div class="history-item-content collapsed" id="content-${job.job_id}">
+            `;
+            
+            if (job.status === 'completed' && job.result_files) {
+                const hasSummary = job.summary && job.summary.status === 'completed';
+                const summaryProcessing = job.summary && job.summary.status === 'processing';
+                
+                content += `
+                    <div class="format-tabs">
+                        <button class="format-tab active" data-job-id="${job.job_id}" data-format="txt">📝 Text</button>
+                        <button class="format-tab" data-job-id="${job.job_id}" data-format="srt">🎬 SRT</button>
+                        <button class="format-tab" data-job-id="${job.job_id}" data-format="vtt">🎬 VTT</button>
+                        ${hasSummary ? `<button class="format-tab" data-job-id="${job.job_id}" data-format="summary">✨ Summary</button>` : ''}
+                    </div>
+                    <div class="format-content active" id="content-${job.job_id}-txt">
+                        <div class="download-links" style="margin-bottom: 10px;">
+                            <a href="/api/jobs/${job.job_id}/result.txt" download>⬇️ Download TXT</a>
+                            ${!hasSummary && !summaryProcessing ? `
+                                <button class="btn-generate-summary" id="summary-btn-${job.job_id}" onclick="generateSummary('${job.job_id}')">
+                                    ✨ Generate Summary
+                                </button>
+                            ` : ''}
+                            ${summaryProcessing ? `
+                                <button class="btn-generate-summary" disabled>
+                                    <span class="summary-spinner"></span> Generating Summary...
+                                </button>
+                            ` : ''}
+                        </div>
+                        <div class="transcript-preview" id="preview-${job.job_id}-txt">Loading...</div>
+                    </div>
+                    <div class="format-content" id="content-${job.job_id}-srt">
+                        <div class="download-links" style="margin-bottom: 10px;">
+                            <a href="/api/jobs/${job.job_id}/result.srt" download>⬇️ Download SRT</a>
+                        </div>
+                        <div class="transcript-preview" id="preview-${job.job_id}-srt">Loading...</div>
+                    </div>
+                    <div class="format-content" id="content-${job.job_id}-vtt">
+                        <div class="download-links" style="margin-bottom: 10px;">
+                            <a href="/api/jobs/${job.job_id}/result.vtt" download>⬇️ Download VTT</a>
+                        </div>
+                        <div class="transcript-preview" id="preview-${job.job_id}-vtt">Loading...</div>
+                    </div>
+                `;
+                
+                // Add summary tab content if available
+                if (hasSummary) {
+                    content += `
+                        <div class="format-content" id="content-${job.job_id}-summary">
+                            <div class="download-links" style="margin-bottom: 10px;">
+                                <a href="/api/jobs/${job.job_id}/summary_bullets.txt" download>⬇️ Download Bullets</a>
+                                <a href="/api/jobs/${job.job_id}/summary_paragraph.txt" download>⬇️ Download Paragraph</a>
+                            </div>
+                            <div class="summary-section">
+                                <h4>📌 Key Points</h4>
+                                <div class="summary-text" id="summary-bullets-${job.job_id}">Loading...</div>
+                            </div>
+                            <div class="summary-section">
+                                <h4>📄 Summary</h4>
+                                <div class="summary-text" id="summary-paragraph-${job.job_id}">Loading...</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Load summary content
+                    setTimeout(() => {
+                        loadSummaryContent(job.job_id);
+                    }, 100);
+                }
+                
+                // Load txt preview by default (for search) but keep collapsed
+                setTimeout(() => loadPreviewForFormat(job.job_id, 'txt', true), 100);
+            } else if (job.status === 'failed') {
+                content += `<p style="color: #dc3545; margin-top: 10px;">⚠️ Error: ${job.error || 'Unknown error'}</p>`;
+            }
+            
+            content += `
+                    </div>
+                </div>
+            `;
+            return content;
+        }
+        
+        function switchFormat(e) {
+            const tab = e.target;
+            const jobId = tab.dataset.jobId;
+            const format = tab.dataset.format;
+            
+            // Update tabs
+            document.querySelectorAll(`[data-job-id="${jobId}"]`).forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Update content
+            document.querySelectorAll(`[id^="content-${jobId}-"]`).forEach(c => c.classList.remove('active'));
+            document.getElementById(`content-${jobId}-${format}`).classList.add('active');
+            
+            // Load preview if not already loaded
+            const preview = document.getElementById(`preview-${jobId}-${format}`);
+            if (preview.textContent === 'Loading...') {
+                loadPreviewForFormat(jobId, format);
+            }
+        }
+        
+        async function loadPreviewForFormat(jobId, format, forSearch = false) {
+            try {
+                const response = await fetch(`/api/jobs/${jobId}/result.${format}`);
+                const text = await response.text();
+                const preview = document.getElementById(`preview-${jobId}-${format}`);
+                
+                // Store full text for search
+                if (forSearch && format === 'txt') {
+                    const item = document.querySelector(`[data-job-id="${jobId}"]`);
+                    if (item) item.dataset.content = text.toLowerCase();
+                }
+                
+                // Limit preview to first 1000 characters
+                const truncated = text.length > 1000 ? text.substring(0, 1000) + '\n\n... (truncated, download for full content)' : text;
+                preview.textContent = truncated;
+            } catch (error) {
+                document.getElementById(`preview-${jobId}-${format}`).textContent = 'Failed to load preview';
+            }
+        }
+        
+        // Toggle individual item
+        function toggleItem(jobId) {
+            const content = document.getElementById(`content-${jobId}`);
+            const icon = document.getElementById(`icon-${jobId}`);
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                icon.classList.remove('collapsed');
+            } else {
+                content.classList.add('collapsed');
+                icon.classList.add('collapsed');
+            }
+        }
+        
+        // Toggle all items
+        function toggleAllItems(collapse) {
+            document.querySelectorAll('.history-item-content').forEach(content => {
+                const jobId = content.id.replace('content-', '');
+                const icon = document.getElementById(`icon-${jobId}`);
+                
+                if (collapse) {
+                    content.classList.add('collapsed');
+                    if (icon) icon.classList.add('collapsed');
+                } else {
+                    content.classList.remove('collapsed');
+                    if (icon) icon.classList.remove('collapsed');
+                }
+            });
+        }
+        
+        // Filter history by filename and content (fuzzy search)
+        function filterHistory() {
+            const searchTerm = document.getElementById('searchHistory').value.toLowerCase();
+            
+            if (!searchTerm) {
+                // Show all and remove highlights if search is empty
+                document.querySelectorAll('.history-item').forEach(item => {
+                    item.style.display = 'block';
+                    item.classList.remove('search-match');
+                });
+                return;
+            }
+            
+            // Split search term into words for fuzzy matching
+            const searchWords = searchTerm.split(/\s+/).filter(w => w);
+            
+            document.querySelectorAll('.history-item').forEach(item => {
+                const filename = item.dataset.filename || '';
+                const content = item.dataset.content || '';
+                const combinedText = filename + ' ' + content;
+                
+                // Check if all search words appear in filename or content
+                const matches = searchWords.every(word => combinedText.includes(word));
+                
+                if (matches) {
+                    item.style.display = 'block';
+                    item.classList.add('search-match');
+                } else {
+                    item.style.display = 'none';
+                    item.classList.remove('search-match');
+                }
+            });
+        }
+        
+        // Delete a single job
+        async function deleteJob(jobId) {
+            if (!confirm('Are you sure you want to delete this transcription?')) return;
+            
+            try {
+                const response = await fetch(`/api/jobs/${jobId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    // Remove from UI
+                    const item = document.querySelector(`[data-job-id="${jobId}"]`);
+                    if (item) item.remove();
+                    
+                    // Reload if no items left
+                    if (document.querySelectorAll('.history-item').length === 0) {
+                        loadHistory();
+                    }
+                } else {
+                    alert('Failed to delete transcription');
+                }
+            } catch (error) {
+                console.error('Delete failed:', error);
+                alert('Failed to delete transcription');
+            }
+        }
+        
+        // Delete all history
+        async function deleteAllHistory() {
+            if (!confirm('Are you sure you want to delete ALL transcriptions? This cannot be undone!')) return;
+            
+            try {
+                const response = await fetch('/api/jobs', {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadHistory();
+                } else {
+                    alert('Failed to delete all transcriptions');
+                }
+            } catch (error) {
+                console.error('Delete all failed:', error);
+                alert('Failed to delete all transcriptions');
+            }
+        }
+        
+        // Generate summary for a job
+        async function generateSummary(jobId) {
+            const button = document.getElementById(`summary-btn-${jobId}`);
+            if (!button) return;
+            
+            // Disable button and show spinner
+            button.disabled = true;
+            button.innerHTML = '<span class="summary-spinner"></span> Generating Summary...';
+            
+            try {
+                const response = await fetch(`/api/jobs/${jobId}/summarize`, {
+                    method: 'POST'
+                });
+                
+                if (response.status === 409) {
+                    alert('System is busy with another task. Please try again in a moment.');
+                    button.disabled = false;
+                    button.innerHTML = '✨ Generate Summary';
+                    return;
+                }
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to start summarization');
+                }
+                
+                const data = await response.json();
+                
+                if (data.status === 'completed') {
+                    // Already completed, reload history
+                    loadHistory();
+                } else {
+                    // Poll for completion
+                    pollSummaryStatus(jobId);
+                }
+                
+            } catch (error) {
+                console.error('Failed to generate summary:', error);
+                alert(`Failed to generate summary: ${error.message}`);
+                button.disabled = false;
+                button.innerHTML = '✨ Generate Summary';
+            }
+        }
+        
+        // Poll summary status
+        async function pollSummaryStatus(jobId) {
+            const pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/jobs/${jobId}/status`);
+                    const job = await response.json();
+                    
+                    if (!job.summary) {
+                        clearInterval(pollInterval);
+                        return;
+                    }
+                    
+                    if (job.summary.status === 'completed') {
+                        clearInterval(pollInterval);
+                        // Reload history to show summary tab
+                        loadHistory();
+                    } else if (job.summary.status === 'error') {
+                        clearInterval(pollInterval);
+                        alert(`Summary generation failed: ${job.summary.error || 'Unknown error'}`);
+                        loadHistory();
+                    }
+                    
+                } catch (error) {
+                    console.error('Failed to poll summary status:', error);
+                    clearInterval(pollInterval);
+                }
+            }, 1000); // Poll every second
+        }
+        
+        // Load summary content
+        async function loadSummaryContent(jobId) {
+            try {
+                // Load bullets
+                const bulletsResponse = await fetch(`/api/jobs/${jobId}/summary_bullets.txt`);
+                if (bulletsResponse.ok) {
+                    const bulletsText = await bulletsResponse.text();
+                    const bulletsEl = document.getElementById(`summary-bullets-${jobId}`);
+                    if (bulletsEl) bulletsEl.textContent = bulletsText;
+                }
+                
+                // Load paragraph
+                const paragraphResponse = await fetch(`/api/jobs/${jobId}/summary_paragraph.txt`);
+                if (paragraphResponse.ok) {
+                    const paragraphText = await paragraphResponse.text();
+                    const paragraphEl = document.getElementById(`summary-paragraph-${jobId}`);
+                    if (paragraphEl) paragraphEl.textContent = paragraphText;
+                }
+                
+            } catch (error) {
+                console.error('Failed to load summary content:', error);
+                const bulletsEl = document.getElementById(`summary-bullets-${jobId}`);
+                const paragraphEl = document.getElementById(`summary-paragraph-${jobId}`);
+                if (bulletsEl) bulletsEl.textContent = 'Failed to load summary';
+                if (paragraphEl) paragraphEl.textContent = 'Failed to load summary';
+            }
         }
     </script>
 </body>

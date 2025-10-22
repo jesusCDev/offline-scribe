@@ -1,22 +1,104 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "🚀 Building Silent Scribe Docker image..."
-echo "⚠️  This will take a while (downloading and bundling all models)"
-echo ""
-
 cd "$(dirname "$0")/.."
 
-# Build for current architecture
-docker build \
-  -t silent-scribe:latest \
-  -f docker/Dockerfile \
-  .
+echo "🚀 Silent Scribe - Build Script"
+echo "================================"
+echo ""
+
+# Check if Docker is running
+echo "🔍 Checking Docker..."
+if ! docker info >/dev/null 2>&1; then
+    echo "❌ Docker is not running. Please start Docker and try again."
+    exit 1
+fi
+echo "✓ Docker is running"
+
+# Check if image already exists
+if docker images silent-scribe:latest | grep -q silent-scribe; then
+    echo ""
+    echo "⚠️  Image 'silent-scribe:latest' already exists."
+    echo "   This will rebuild it with the latest code."
+    read -p "   Continue? (Y/n) " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Nn]$ ]]; then
+        echo "Build cancelled."
+        exit 0
+    fi
+fi
+
+# Check available disk space
+echo ""
+echo "💾 Checking disk space..."
+AVAILABLE_GB=$(df -BG . | awk 'NR==2 {print $4}' | sed 's/G//')
+echo "   Available: ${AVAILABLE_GB} GB"
+if [ "$AVAILABLE_GB" -lt 30 ]; then
+    echo "⚠️  Warning: Less than 30 GB free. Build requires ~27 GB total."
+    read -p "   Continue anyway? (y/N) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+fi
+
+# Create data directories with correct permissions
+echo ""
+echo "📁 Setting up data directories..."
+mkdir -p data/uploads data/results
+chmod -R 777 data/ 2>/dev/null || true
+echo "✓ Data directories ready"
+
+# Load HF_TOKEN from .env if it exists
+if [ -f .env ]; then
+    export $(grep -v '^#' .env | xargs)
+    echo "✓ Loaded HF_TOKEN from .env (for optional speaker diarization)"
+else
+    echo "ℹ️  No .env file (speaker diarization will be disabled)"
+fi
 
 echo ""
-echo "✅ Build complete!"
+echo "🔨 Starting Docker build..."
+echo "   This will take 30-60 minutes and download:"
+echo "   - Whisper models (~15 GB)"
+echo "   - Llama 2 model (~4 GB)"
+echo "   - Total image size: ~27 GB"
 echo ""
-echo "Image size:"
-docker images silent-scribe:latest
-echo ""
-echo "To run: ./scripts/run.sh"
+
+# Build for current architecture
+if docker build \
+  --build-arg HF_TOKEN="${HF_TOKEN:-}" \
+  --build-arg CACHEBUST=$(date +%s) \
+  -t silent-scribe:latest \
+  -f docker/Dockerfile \
+  . ; then
+    
+    echo ""
+    echo "="==============================="
+    echo "✅ Build complete!"
+    echo "="==============================="
+    echo ""
+    echo "Image info:"
+    docker images silent-scribe:latest --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}"
+    echo ""
+    echo "Features included:"
+    echo "  ✓ Whisper transcription (5 models, 2 engines)"
+    echo "  ✓ Llama 2 7B summarization"
+    echo "  ✓ Settings persistence"
+    echo "  ✓ Air-gapped operation"
+    echo ""
+    echo "Next steps:"
+    echo "  Run:  ./scripts/run.sh"
+    echo "  Or:   make run"
+    echo ""
+else
+    echo ""
+    echo "❌ Build failed!"
+    echo ""
+    echo "Troubleshooting:"
+    echo "  1. Check Docker logs above for errors"
+    echo "  2. Ensure you have ~30 GB free disk space"
+    echo "  3. Try: docker system prune -a (to free space)"
+    echo "  4. Retry the build"
+    exit 1
+fi

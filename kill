@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-# Stop Silent Scribe
-
-set -euo pipefail
-
-echo "🛑 Stopping Silent Scribe..."
-sudo docker stop silent-scribe 2>/dev/null || echo "Container not running"
-echo "✅ Stopped"

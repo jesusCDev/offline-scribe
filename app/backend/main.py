@@ -9,10 +9,11 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from .config import settings, AVAILABLE_ENGINES, AVAILABLE_MODELS, AVAILABLE_COMPUTE_TYPES
+from .config import settings, AVAILABLE_ENGINES, AVAILABLE_MODELS, AVAILABLE_COMPUTE_TYPES, SUMMARIZATION_AVAILABLE, LLAMA_BIN, LLAMA_MODEL_PATH
 from .job_manager import JobManager
 from .engines.faster_whisper_engine import FasterWhisperEngine
 from .engines.whisper_cpp_engine import WhisperCppEngine
+from .engines.llama_engine import LlamaSummarizer
 
 # Initialize app
 app = FastAPI(title="Silent Scribe - Air-Gapped Video Transcription")
@@ -25,6 +26,16 @@ settings.results_dir.mkdir(parents=True, exist_ok=True)
 job_manager = JobManager(settings.results_dir)
 fw_engine = FasterWhisperEngine(settings.models_dir)
 wc_engine = WhisperCppEngine(settings.models_dir)
+
+# Initialize summarizer if available
+if SUMMARIZATION_AVAILABLE:
+    llama_engine = LlamaSummarizer(
+        model_path=LLAMA_MODEL_PATH,
+        llama_bin=LLAMA_BIN,
+        threads=settings.default_threads
+    )
+else:
+    llama_engine = None
 
 # Mount static files
 try:
@@ -50,6 +61,7 @@ class JobStatusResponse(BaseModel):
     completed_at: Optional[str]
     error: Optional[str]
     result_files: Optional[dict]
+    summary: Optional[dict] = None
 
 # Routes
 @app.get("/", response_class=HTMLResponse)
@@ -80,7 +92,8 @@ async def get_config():
             "beam_size": 5,
             "temperature": 0.0,
             "vad_filter": True,
-            "language": "auto"
+            "language": "en",  # Changed default from "auto" to "en" (English)
+            "summarization_available": SUMMARIZATION_AVAILABLE
         }
     )
 
@@ -94,7 +107,8 @@ async def transcribe(
     beam_size: int = Form(5),
     temperature: float = Form(0.0),
     vad_filter: bool = Form(True),
-    language: str = Form("auto")
+    language: str = Form("auto"),
+    diarization: str = Form("false")
 ):
     """Upload and transcribe a video file."""
     
@@ -131,7 +145,8 @@ async def transcribe(
                 "beam_size": beam_size,
                 "temperature": temperature,
                 "vad_filter": vad_filter,
-                "language": language
+                "language": language,
+                "diarization": diarization.lower() == "true"
             }
         )
     )
@@ -155,7 +170,8 @@ async def get_job_status(job_id: str):
         created_at=job.created_at,
         completed_at=job.completed_at,
         error=job.error,
-        result_files=job.result_files
+        result_files=job.result_files,
+        summary=job.summary
     )
 
 @app.get("/api/jobs/{job_id}/result.{format}")
@@ -196,15 +212,120 @@ async def get_history(limit: int = 20):
             created_at=job.created_at,
             completed_at=job.completed_at,
             error=job.error,
-            result_files=job.result_files
+            result_files=job.result_files,
+            summary=job.summary
         )
         for job in jobs
     ]
 
+@app.delete("/api/jobs/{job_id}")
+async def delete_job(job_id: str):
+    """Delete a transcription job and its files."""
+    import shutil
+    
+    job_dir = settings.results_dir / job_id
+    if job_dir.exists():
+        shutil.rmtree(job_dir)
+        return {"status": "deleted"}
+    else:
+        raise HTTPException(404, "Job not found")
+
+@app.delete("/api/jobs")
+async def delete_all_jobs():
+    """Delete all transcription jobs."""
+    import shutil
+    
+    deleted_count = 0
+    for job_dir in settings.results_dir.iterdir():
+        if job_dir.is_dir() and job_dir.name != ".gitkeep":
+            shutil.rmtree(job_dir)
+            deleted_count += 1
+    
+    return {"status": "deleted", "count": deleted_count}
+
+@app.post("/api/jobs/{job_id}/summarize")
+async def summarize_job(job_id: str):
+    """Generate summary for a completed transcription."""
+    if not SUMMARIZATION_AVAILABLE:
+        raise HTTPException(503, "Summarization feature is not available")
+    
+    # Check if job exists and is completed
+    job = job_manager.get_job(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    
+    if job.status != "completed":
+        raise HTTPException(400, "Can only summarize completed transcriptions")
+    
+    # Check if summaries already exist
+    job_dir = settings.results_dir / job_id
+    bullets_path = job_dir / "summary_bullets.txt"
+    paragraph_path = job_dir / "summary_paragraph.txt"
+    
+    if bullets_path.exists() and paragraph_path.exists():
+        # Already summarized, return paths
+        job_manager.update_summary(
+            job_id,
+            status="completed",
+            progress=100,
+            bullets_path=bullets_path,
+            paragraph_path=paragraph_path
+        )
+        return {"status": "completed", "job_id": job_id}
+    
+    # Check if system is busy
+    if not await job_manager.start_summarization(job_id):
+        raise HTTPException(409, "System is busy with another task")
+    
+    # Start summarization in background
+    asyncio.create_task(process_summarization(job_id))
+    
+    return {"status": "processing", "job_id": job_id}
+
+@app.get("/api/jobs/{job_id}/summary_bullets.txt")
+async def download_bullet_summary(job_id: str):
+    """Download bullet point summary."""
+    job = job_manager.get_job(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    
+    if not job.summary or job.summary.get("status") != "completed":
+        raise HTTPException(400, "Summary not available")
+    
+    bullets_path = Path(job.summary.get("bullets_path"))
+    if not bullets_path.exists():
+        raise HTTPException(404, "Summary file not found")
+    
+    return FileResponse(
+        bullets_path,
+        media_type="text/plain",
+        filename=f"{job.filename}_summary_bullets.txt"
+    )
+
+@app.get("/api/jobs/{job_id}/summary_paragraph.txt")
+async def download_paragraph_summary(job_id: str):
+    """Download paragraph summary."""
+    job = job_manager.get_job(job_id)
+    if not job:
+        raise HTTPException(404, "Job not found")
+    
+    if not job.summary or job.summary.get("status") != "completed":
+        raise HTTPException(400, "Summary not available")
+    
+    paragraph_path = Path(job.summary.get("paragraph_path"))
+    if not paragraph_path.exists():
+        raise HTTPException(404, "Summary file not found")
+    
+    return FileResponse(
+        paragraph_path,
+        media_type="text/plain",
+        filename=f"{job.filename}_summary_paragraph.txt"
+    )
+
 @app.get("/health")
 async def health():
     """Health check."""
-    return {"status": "ok"}
+    return {"status": "ok", "summarization_available": SUMMARIZATION_AVAILABLE}
 
 # Background processing
 async def process_transcription(
@@ -230,19 +351,30 @@ async def process_transcription(
         
         update_progress(5)
         
-        subprocess.run(
+        # Extract audio with ffmpeg
+        result = subprocess.run(
             [
                 "ffmpeg",
                 "-i", str(video_path),
-                "-ar", "16000",
-                "-ac", "1",
-                "-c:a", "pcm_s16le",
-                "-y",
+                "-vn",  # Disable video
+                "-ar", "16000",  # Sample rate 16kHz
+                "-ac", "1",  # Mono
+                "-c:a", "pcm_s16le",  # PCM codec
+                "-y",  # Overwrite output
                 str(audio_path)
             ],
-            check=True,
-            capture_output=True
+            capture_output=True,
+            text=True
         )
+        
+        if result.returncode != 0:
+            # Check for common errors
+            stderr = result.stderr.lower()
+            if "does not contain any stream" in stderr or "output file is empty" in stderr:
+                raise RuntimeError("This video file has no audio track. Please upload a video with audio.")
+            else:
+                error_msg = f"Failed to extract audio from video. ffmpeg error: {result.stderr[:500]}"
+                raise RuntimeError(error_msg)
         
         update_progress(10)
         
@@ -285,6 +417,52 @@ async def process_transcription(
         )
         # Clean up on failure
         video_path.unlink(missing_ok=True)
+
+# Background processing for summarization
+async def process_summarization(job_id: str):
+    """Process summarization in background."""
+    
+    def update_progress(progress: int):
+        """Callback for progress updates."""
+        job_manager.update_summary(job_id, progress=progress)
+    
+    try:
+        # Update status to processing
+        job_manager.update_summary(job_id, status="processing", progress=0)
+        
+        # Read transcript
+        job_dir = settings.results_dir / job_id
+        transcript_path = job_dir / "transcript.txt"
+        
+        if not transcript_path.exists():
+            raise RuntimeError("Transcript file not found")
+        
+        transcript = transcript_path.read_text(encoding="utf-8")
+        
+        update_progress(5)
+        
+        # Generate summaries
+        result_files = llama_engine.generate_summaries(
+            transcript,
+            job_dir,
+            update_progress
+        )
+        
+        # Store result paths
+        job_manager.update_summary(
+            job_id,
+            status="completed",
+            progress=100,
+            bullets_path=result_files["bullets"],
+            paragraph_path=result_files["paragraph"]
+        )
+        
+    except Exception as e:
+        job_manager.update_summary(
+            job_id,
+            status="error",
+            error=str(e)
+        )
 
 if __name__ == "__main__":
     import uvicorn

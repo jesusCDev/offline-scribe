@@ -57,17 +57,15 @@ The application starts at: **http://localhost:7860**
 
 ## Stop the Application
 
+**Just press Ctrl+C** - the container will automatically stop and clean up!
+
+Or run:
 ```bash
 make stop
+# or: ./scripts/stop.sh
 ```
 
-Or:
-
-```bash
-./scripts/stop.sh
-```
-
-Or just press **Ctrl+C** in the terminal.
+✅ **No worries about orphaned containers** - `run.sh` automatically detects and removes any leftover containers before starting.
 
 ---
 
@@ -99,14 +97,19 @@ Or just press **Ctrl+C** in the terminal.
 make build
 ```
 
-### Container won't start
-```bash
-# Check if port 7860 is already in use
-lsof -i :7860
+### "Port already in use" error
 
-# Or use a different port
-docker run -p 8080:7860 -v $(pwd)/data:/data --network none --name silent-scribe silent-scribe:latest
-# Then visit http://localhost:8080
+**This shouldn't happen!** The scripts auto-cleanup. But if it does:
+```bash
+./scripts/stop.sh   # Force cleanup
+./scripts/run.sh    # Try again
+```
+
+Still stuck? Check what's using the port:
+```bash
+lsof -i :7860
+# or
+sudo netstat -tlnp | grep 7860
 ```
 
 ### Out of memory during transcription
