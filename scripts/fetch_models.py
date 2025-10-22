@@ -23,9 +23,11 @@ def fetch_faster_whisper_models():
     
     for size in SIZES:
         print(f"  - Downloading {size}...")
-        model_name = f"guillaumekln/faster-whisper-{size}"
+        # Use correct model names
         if size == "large-v3":
-            model_name = "guillaumekln/faster-whisper-large-v3"
+            model_name = "Systran/faster-whisper-large-v3"
+        else:
+            model_name = f"guillaumekln/faster-whisper-{size}"
         
         try:
             cache_dir = snapshot_download(
