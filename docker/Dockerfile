@@ -45,11 +45,15 @@ COPY scripts/fetch_models.py /tmp/fetch_models.py
 ENV HF_HOME=/tmp/hf_cache
 RUN mkdir -p /opt/models
 
-# Copy local models if they exist (build context aware)
-COPY resources/models/ /opt/models/ 2>/dev/null || true
+# Copy local models if they exist (will be empty if not present)
+COPY resources/models /opt/models_local
 
 # Fetch missing models (this requires network access at build time if models not local)
-RUN python3 /tmp/fetch_models.py --skip-existing
+RUN if [ -n "$(ls -A /opt/models_local 2>/dev/null)" ]; then \
+        echo "Using local models from resources/models/"; \
+        cp -r /opt/models_local/* /opt/models/ 2>/dev/null || true; \
+    fi && \
+    python3 /tmp/fetch_models.py --skip-existing
 
 # Stage 4: Final runtime image
 FROM python:3.11-slim
