@@ -87,6 +87,11 @@
             margin-bottom: 5px;
             font-size: 13px;
             color: #2c3e50;
+            cursor: help;
+        }
+        
+        [title] {
+            cursor: help;
         }
         
         select, input[type="number"], input[type="text"] {
@@ -94,6 +99,41 @@
             border: 1px solid #ddd;
             border-radius: 4px;
             font-size: 14px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .slider-value {
+            display: inline-block;
+            margin-left: 8px;
+            font-weight: 600;
+            color: #3498db;
         }
         
         .btn {
@@ -237,16 +277,16 @@
         
         <div class="settings">
             <div class="setting-group">
-                <label for="engine">Engine</label>
-                <select id="engine">
+                <label for="engine" title="Choose which AI engine to use for transcription">Engine</label>
+                <select id="engine" title="Faster Whisper: Better for most computers. Whisper.cpp: Faster on Mac computers with Apple chips.">
                     <option value="faster-whisper">Faster Whisper</option>
                     <option value="whisper.cpp">Whisper.cpp</option>
                 </select>
             </div>
             
             <div class="setting-group">
-                <label for="model">Model Size</label>
-                <select id="model">
+                <label for="model" title="Larger models are more accurate but slower. Smaller models are faster but less accurate.">Model Size</label>
+                <select id="model" title="Tiny: Very fast but less accurate. Small: Good balance (recommended). Large: Most accurate but slowest.">
                     <option value="tiny">Tiny (fastest)</option>
                     <option value="base">Base</option>
                     <option value="small" selected>Small (recommended)</option>
@@ -256,23 +296,26 @@
             </div>
             
             <div class="setting-group" id="computeTypeGroup">
-                <label for="computeType">Compute Type</label>
-                <select id="computeType">
-                    <option value="int8">int8</option>
-                    <option value="int8_float16" selected>int8_float16</option>
+                <label for="computeType" title="How the computer processes the audio. Different settings trade speed for accuracy.">Compute Type</label>
+                <select id="computeType" title="int8: Fastest but less precise. int8_float16: Good balance (recommended). float32: Most precise but slowest.">
+                    <option value="int8">int8 (fastest)</option>
+                    <option value="int8_float16" selected>int8_float16 (recommended)</option>
                     <option value="int16">int16</option>
-                    <option value="float32">float32</option>
+                    <option value="float32">float32 (most accurate)</option>
                 </select>
             </div>
             
             <div class="setting-group">
-                <label for="threads">CPU Threads</label>
-                <input type="number" id="threads" value="4" min="1" max="32">
+                <label for="threads" title="How many CPU cores to use. More threads = faster transcription, but may slow down other programs.">
+                    CPU Threads
+                    <span id="threadsValue" class="slider-value">4</span>
+                </label>
+                <input type="range" id="threads" value="4" min="1" max="32" step="1" title="Slide to choose how many CPU cores to use. Using all cores gives fastest results but may make your computer slower for other tasks.">
             </div>
             
             <div class="setting-group">
-                <label for="language">Language</label>
-                <select id="language">
+                <label for="language" title="What language is spoken in the video? Auto-detect works well in most cases.">Language</label>
+                <select id="language" title="Choose the spoken language or use Auto-detect to let the AI figure it out.">
                     <option value="auto">Auto-detect</option>
                     <option value="en">English</option>
                     <option value="es">Spanish</option>
@@ -316,6 +359,32 @@
         const results = document.getElementById('results');
         const engine = document.getElementById('engine');
         const computeTypeGroup = document.getElementById('computeTypeGroup');
+        const threadsSlider = document.getElementById('threads');
+        const threadsValue = document.getElementById('threadsValue');
+        
+        // Load config on page load
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+                
+                // Set threads slider min/max and default value
+                threadsSlider.min = config.defaults.min_threads;
+                threadsSlider.max = config.defaults.max_threads;
+                threadsSlider.value = config.defaults.threads;
+                threadsValue.textContent = config.defaults.threads;
+            } catch (error) {
+                console.error('Failed to load config:', error);
+            }
+        }
+        
+        // Update threads value display
+        threadsSlider.addEventListener('input', (e) => {
+            threadsValue.textContent = e.target.value;
+        });
+        
+        // Load config when page loads
+        loadConfig();
         
         // Toggle compute type visibility based on engine
         engine.addEventListener('change', () => {

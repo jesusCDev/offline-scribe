@@ -1,0 +1,116 @@
+🚀 Building Silent Scribe...
+⚠️  This will take 30-60 minutes if downloading models
+
+#0 building with "default" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 3.01kB done
+#1 DONE 0.0s
+
+#2 [internal] load metadata for docker.io/library/python:3.11-slim
+#2 DONE 0.2s
+
+#3 [internal] load .dockerignore
+#3 transferring context: 2B done
+#3 DONE 0.0s
+
+#4 [base-builder 1/4] FROM docker.io/library/python:3.11-slim@sha256:1738c75ae61595d2a9a5301d60a9a2f61abe7017005b3ccb660103d2476c6946
+#4 DONE 0.0s
+
+#5 [stage-3  2/10] RUN apt-get update && apt-get install -y --no-install-recommends     ffmpeg     libsndfile1     libopenblas0     && rm -rf /var/lib/apt/lists/*
+#5 CACHED
+
+#6 [internal] load build context
+#6 transferring context: 2.17kB done
+#6 DONE 0.0s
+
+#7 [base-builder 2/4] RUN apt-get update && apt-get install -y --no-install-recommends     build-essential     cmake     git     ffmpeg     libavcodec-dev     libavformat-dev     libavdevice-dev     libavutil-dev     libavfilter-dev     libswscale-dev     libswresample-dev     libsndfile1     libopenblas-dev     pkg-config     curl     ca-certificates     && rm -rf /var/lib/apt/lists/*
+#7 CACHED
+
+#8 [base-builder 3/4] COPY requirements.txt /tmp/requirements.txt
+#8 DONE 0.0s
+
+#9 [base-builder 4/4] RUN pip install --no-cache-dir -r /tmp/requirements.txt
+#9 1.291 Collecting fastapi==0.109.0 (from -r /tmp/requirements.txt (line 2))
+#9 1.533   Downloading fastapi-0.109.0-py3-none-any.whl.metadata (24 kB)
+#9 1.585 Collecting uvicorn==0.27.0 (from uvicorn[standard]==0.27.0->-r /tmp/requirements.txt (line 3))
+#9 1.655   Downloading uvicorn-0.27.0-py3-none-any.whl.metadata (6.4 kB)
+#9 1.688 Collecting jinja2==3.1.3 (from -r /tmp/requirements.txt (line 4))
+#9 1.758   Downloading Jinja2-3.1.3-py3-none-any.whl.metadata (3.3 kB)
+#9 1.789 Collecting python-multipart==0.0.6 (from -r /tmp/requirements.txt (line 5))
+#9 1.856   Downloading python_multipart-0.0.6-py3-none-any.whl.metadata (2.5 kB)
+#9 2.007 Collecting pydantic==2.5.3 (from -r /tmp/requirements.txt (line 6))
+#9 2.074   Downloading pydantic-2.5.3-py3-none-any.whl.metadata (65 kB)
+#9 2.156      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 65.6/65.6 kB 773.6 kB/s eta 0:00:00
+#9 2.189 Collecting pydantic-settings==2.1.0 (from -r /tmp/requirements.txt (line 7))
+#9 2.257   Downloading pydantic_settings-2.1.0-py3-none-any.whl.metadata (2.9 kB)
+#9 2.280 Collecting faster-whisper==1.0.3 (from -r /tmp/requirements.txt (line 10))
+#9 2.355   Downloading faster_whisper-1.0.3-py3-none-any.whl.metadata (15 kB)
+#9 2.409 Collecting huggingface-hub==0.20.3 (from -r /tmp/requirements.txt (line 11))
+#9 2.479   Downloading huggingface_hub-0.20.3-py3-none-any.whl.metadata (12 kB)
+#9 2.525 Collecting av==13.1.0 (from -r /tmp/requirements.txt (line 12))
+#9 2.598   Downloading av-13.1.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (4.4 kB)
+#9 2.618 Collecting ffmpeg-python==0.2.0 (from -r /tmp/requirements.txt (line 15))
+#9 2.685   Downloading ffmpeg_python-0.2.0-py3-none-any.whl.metadata (1.7 kB)
+#9 2.715 Collecting srt==3.5.3 (from -r /tmp/requirements.txt (line 18))
+#9 2.785   Downloading srt-3.5.3.tar.gz (28 kB)
+#9 2.802   Preparing metadata (setup.py): started
+#9 3.033   Preparing metadata (setup.py): finished with status 'done'
+#9 3.061 Collecting webvtt-py==0.5.1 (from -r /tmp/requirements.txt (line 19))
+#9 3.132   Downloading webvtt_py-0.5.1-py3-none-any.whl.metadata (3.4 kB)
+#9 3.162 Collecting aiofiles==23.2.1 (from -r /tmp/requirements.txt (line 22))
+#9 3.227   Downloading aiofiles-23.2.1-py3-none-any.whl.metadata (9.7 kB)
+#9 3.319 Collecting starlette<0.36.0,>=0.35.0 (from fastapi==0.109.0->-r /tmp/requirements.txt (line 2))
+#9 3.389   Downloading starlette-0.35.1-py3-none-any.whl.metadata (5.8 kB)
+#9 3.418 Collecting typing-extensions>=4.8.0 (from fastapi==0.109.0->-r /tmp/requirements.txt (line 2))
+#9 3.491   Downloading typing_extensions-4.15.0-py3-none-any.whl.metadata (3.3 kB)
+#9 3.530 Collecting click>=7.0 (from uvicorn==0.27.0->uvicorn[standard]==0.27.0->-r /tmp/requirements.txt (line 3))
+#9 3.596   Downloading click-8.3.0-py3-none-any.whl.metadata (2.6 kB)
+#9 3.623 Collecting h11>=0.8 (from uvicorn==0.27.0->uvicorn[standard]==0.27.0->-r /tmp/requirements.txt (line 3))
+#9 3.691   Downloading h11-0.16.0-py3-none-any.whl.metadata (8.3 kB)
+#9 3.743 Collecting MarkupSafe>=2.0 (from jinja2==3.1.3->-r /tmp/requirements.txt (line 4))
+#9 3.813   Downloading markupsafe-3.0.3-cp311-cp311-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl.metadata (2.7 kB)
+#9 3.842 Collecting annotated-types>=0.4.0 (from pydantic==2.5.3->-r /tmp/requirements.txt (line 6))
+#9 3.911   Downloading annotated_types-0.7.0-py3-none-any.whl.metadata (15 kB)
+#9 4.397 Collecting pydantic-core==2.14.6 (from pydantic==2.5.3->-r /tmp/requirements.txt (line 6))
+#9 4.468   Downloading pydantic_core-2.14.6-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (6.5 kB)
+#9 4.512 Collecting python-dotenv>=0.21.0 (from pydantic-settings==2.1.0->-r /tmp/requirements.txt (line 7))
+#9 4.578   Downloading python_dotenv-1.1.1-py3-none-any.whl.metadata (24 kB)
+#9 4.636 INFO: pip is looking at multiple versions of faster-whisper to determine which version is compatible with other requirements. This could take a while.
+#9 4.654 ERROR: Cannot install -r /tmp/requirements.txt (line 10) and av==13.1.0 because these package versions have conflicting dependencies.
+#9 4.654 
+#9 4.654 The conflict is caused by:
+#9 4.654     The user requested av==13.1.0
+#9 4.654     faster-whisper 1.0.3 depends on av<13 and >=11.0
+#9 4.654 
+#9 4.654 To fix this you could try to:
+#9 4.654 1. loosen the range of package versions you've specified
+#9 4.654 2. remove package versions to allow pip attempt to solve the dependency conflict
+#9 4.654 
+#9 4.655 ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+#9 4.764 
+#9 4.764 [notice] A new release of pip is available: 24.0 -> 25.2
+#9 4.764 [notice] To update, run: pip install --upgrade pip
+#9 ERROR: process "/bin/sh -c pip install --no-cache-dir -r /tmp/requirements.txt" did not complete successfully: exit code: 1
+------
+ > [base-builder 4/4] RUN pip install --no-cache-dir -r /tmp/requirements.txt:
+4.654     faster-whisper 1.0.3 depends on av<13 and >=11.0
+4.654 
+4.654 To fix this you could try to:
+4.654 1. loosen the range of package versions you've specified
+4.654 2. remove package versions to allow pip attempt to solve the dependency conflict
+4.654 
+4.655 ERROR: ResolutionImpossible: for help visit https://pip.pypa.io/en/latest/topics/dependency-resolution/#dealing-with-dependency-conflicts
+4.764 
+4.764 [notice] A new release of pip is available: 24.0 -> 25.2
+4.764 [notice] To update, run: pip install --upgrade pip
+------
+Dockerfile:28
+--------------------
+  26 |     # Install Python dependencies
+  27 |     COPY requirements.txt /tmp/requirements.txt
+  28 | >>> RUN pip install --no-cache-dir -r /tmp/requirements.txt
+  29 |     
+  30 |     # Stage 2: Build whisper.cpp
+--------------------
+ERROR: failed to build: failed to solve: process "/bin/sh -c pip install --no-cache-dir -r /tmp/requirements.txt" did not complete successfully: exit code: 1

@@ -12,10 +12,11 @@ echo "Press Ctrl+C to stop"
 echo ""
 
 mkdir -p data/uploads data/results
+chmod -R 777 data/
 
 sudo docker run --rm -it \
   -p 7860:7860 \
-  -v "$(pwd)/data:/data" \
+  -v "$(pwd)/data:/data:z" \
   --name silent-scribe \
   --network none \
   silent-scribe:latest

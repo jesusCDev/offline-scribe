@@ -64,6 +64,8 @@ async def index():
 @app.get("/api/config")
 async def get_config():
     """Get available configuration options."""
+    import os
+    cpu_count = os.cpu_count() or 4
     return ConfigResponse(
         engines=AVAILABLE_ENGINES,
         models=AVAILABLE_MODELS,
@@ -73,6 +75,8 @@ async def get_config():
             "model": settings.default_model,
             "compute_type": settings.default_compute_type,
             "threads": settings.default_threads,
+            "min_threads": 1,
+            "max_threads": cpu_count,
             "beam_size": 5,
             "temperature": 0.0,
             "vad_filter": True,
