@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silent Scribe - Video Transcription</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .upload-zone {
+            border: 3px dashed #bdc3c7;
+            border-radius: 8px;
+            padding: 50px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            background: #fafafa;
+        }
+        
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #3498db;
+            background: #ecf0f1;
+        }
+        
+        .upload-zone.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #95a5a6;
+            margin-bottom: 10px;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .settings {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #2c3e50;
+        }
+        
+        select, input[type="number"], input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: #2980b9;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .status.show {
+            display: block;
+        }
+        
+        .status.processing {
+            background: #d4edff;
+            border-left: 4px solid #3498db;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #3498db;
+            transition: width 0.3s;
+        }
+        
+        .results {
+            margin-top: 20px;
+        }
+        
+        .result-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .download-links a {
+            display: inline-block;
+            margin-right: 10px;
+            padding: 6px 12px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .download-links a:hover {
+            background: #2980b9;
+        }
+        
+        .transcript-preview {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+        
+        .info-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤫 Silent Scribe</h1>
+        <p class="subtitle">Air-gapped video-to-text transcription</p>
+        
+        <div class="info-box">
+            🔒 <strong>Offline Mode:</strong> This application runs completely offline with no internet access for maximum security.
+        </div>
+        
+        <div id="uploadZone" class="upload-zone">
+            <div class="upload-icon">📁</div>
+            <p><strong>Drop a video file here</strong> or click to browse</p>
+            <p style="font-size: 13px; color: #95a5a6; margin-top: 5px;">Supports MP4, MOV, MKV, AVI, and more</p>
+            <input type="file" id="fileInput" accept="video/*,audio/*">
+        </div>
+        
+        <div id="fileName" style="margin-bottom: 15px; font-weight: 600; display: none;"></div>
+        
+        <div class="settings">
+            <div class="setting-group">
+                <label for="engine">Engine</label>
+                <select id="engine">
+                    <option value="faster-whisper">Faster Whisper</option>
+                    <option value="whisper.cpp">Whisper.cpp</option>
+                </select>
+            </div>
+            
+            <div class="setting-group">
+                <label for="model">Model Size</label>
+                <select id="model">
+                    <option value="tiny">Tiny (fastest)</option>
+                    <option value="base">Base</option>
+                    <option value="small" selected>Small (recommended)</option>
+                    <option value="medium">Medium</option>
+                    <option value="large-v3">Large (best quality)</option>
+                </select>
+            </div>
+            
+            <div class="setting-group" id="computeTypeGroup">
+                <label for="computeType">Compute Type</label>
+                <select id="computeType">
+                    <option value="int8">int8</option>
+                    <option value="int8_float16" selected>int8_float16</option>
+                    <option value="int16">int16</option>
+                    <option value="float32">float32</option>
+                </select>
+            </div>
+            
+            <div class="setting-group">
+                <label for="threads">CPU Threads</label>
+                <input type="number" id="threads" value="4" min="1" max="32">
+            </div>
+            
+            <div class="setting-group">
+                <label for="language">Language</label>
+                <select id="language">
+                    <option value="auto">Auto-detect</option>
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="it">Italian</option>
+                    <option value="pt">Portuguese</option>
+                    <option value="zh">Chinese</option>
+                    <option value="ja">Japanese</option>
+                    <option value="ko">Korean</option>
+                </select>
+            </div>
+        </div>
+        
+        <button id="transcribeBtn" class="btn btn-primary" disabled>Start Transcription</button>
+        
+        <div id="status" class="status">
+            <div id="statusText"></div>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div id="statusDetails" style="font-size: 13px; margin-top: 5px;"></div>
+        </div>
+        
+        <div id="results" class="results"></div>
+    </div>
+    
+    <script>
+        let selectedFile = null;
+        let currentJobId = null;
+        let pollingInterval = null;
+        
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const transcribeBtn = document.getElementById('transcribeBtn');
+        const status = document.getElementById('status');
+        const statusText = document.getElementById('statusText');
+        const statusDetails = document.getElementById('statusDetails');
+        const progressFill = document.getElementById('progressFill');
+        const results = document.getElementById('results');
+        const engine = document.getElementById('engine');
+        const computeTypeGroup = document.getElementById('computeTypeGroup');
+        
+        // Toggle compute type visibility based on engine
+        engine.addEventListener('change', () => {
+            computeTypeGroup.style.display = engine.value === 'faster-whisper' ? 'flex' : 'none';
+        });
+        
+        // Upload zone interactions
+        uploadZone.addEventListener('click', () => {
+            if (!uploadZone.classList.contains('disabled')) {
+                fileInput.click();
+            }
+        });
+        
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!uploadZone.classList.contains('disabled')) {
+                uploadZone.classList.add('dragover');
+            }
+        });
+        
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            if (!uploadZone.classList.contains('disabled') && e.dataTransfer.files.length > 0) {
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+        
+        function handleFileSelect(file) {
+            selectedFile = file;
+            fileName.textContent = `📄 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            fileName.style.display = 'block';
+            transcribeBtn.disabled = false;
+        }
+        
+        transcribeBtn.addEventListener('click', startTranscription);
+        
+        async function startTranscription() {
+            if (!selectedFile) return;
+            
+            // Disable UI
+            transcribeBtn.disabled = true;
+            uploadZone.classList.add('disabled');
+            
+            // Show status
+            status.className = 'status show processing';
+            statusText.textContent = '⏳ Starting transcription...';
+            statusDetails.textContent = '';
+            progressFill.style.width = '0%';
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('engine', document.getElementById('engine').value);
+            formData.append('model', document.getElementById('model').value);
+            formData.append('compute_type', document.getElementById('computeType').value);
+            formData.append('threads', document.getElementById('threads').value);
+            formData.append('language', document.getElementById('language').value);
+            formData.append('beam_size', '5');
+            formData.append('temperature', '0.0');
+            formData.append('vad_filter', 'true');
+            
+            try {
+                const response = await fetch('/api/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Upload failed');
+                }
+                
+                const data = await response.json();
+                currentJobId = data.job_id;
+                
+                // Start polling
+                pollingInterval = setInterval(checkJobStatus, 2000);
+                checkJobStatus();
+                
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+        
+        async function checkJobStatus() {
+            if (!currentJobId) return;
+            
+            try {
+                const response = await fetch(`/api/jobs/${currentJobId}/status`);
+                const job = await response.json();
+                
+                progressFill.style.width = `${job.progress}%`;
+                statusDetails.textContent = `${job.engine} | ${job.model} | ${job.progress}%`;
+                
+                if (job.status === 'completed') {
+                    clearInterval(pollingInterval);
+                    showSuccess(job);
+                } else if (job.status === 'failed') {
+                    clearInterval(pollingInterval);
+                    showError(job.error);
+                }
+                
+            } catch (error) {
+                clearInterval(pollingInterval);
+                showError('Failed to check status');
+            }
+        }
+        
+        function showSuccess(job) {
+            status.className = 'status show success';
+            statusText.textContent = '✅ Transcription completed!';
+            
+            // Display results
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'result-item';
+            
+            resultDiv.innerHTML = `
+                <div class="result-header">
+                    <strong>${job.filename}</strong>
+                    <span style="font-size: 13px; color: #7f8c8d;">${new Date(job.created_at).toLocaleString()}</span>
+                </div>
+                <div class="download-links">
+                    <a href="/api/jobs/${job.job_id}/result.txt" download>📄 Download TXT</a>
+                    <a href="/api/jobs/${job.job_id}/result.srt" download>📝 Download SRT</a>
+                    <a href="/api/jobs/${job.job_id}/result.vtt" download>📋 Download VTT</a>
+                </div>
+                <div id="preview-${job.job_id}" class="transcript-preview">Loading preview...</div>
+            `;
+            
+            results.innerHTML = '';
+            results.appendChild(resultDiv);
+            
+            // Load preview
+            loadPreview(job.job_id);
+            
+            // Re-enable UI
+            setTimeout(() => {
+                resetUI();
+            }, 2000);
+        }
+        
+        async function loadPreview(jobId) {
+            try {
+                const response = await fetch(`/api/jobs/${jobId}/result.txt`);
+                const text = await response.text();
+                document.getElementById(`preview-${jobId}`).textContent = text;
+            } catch (error) {
+                document.getElementById(`preview-${jobId}`).textContent = 'Failed to load preview';
+            }
+        }
+        
+        function showError(message) {
+            status.className = 'status show error';
+            statusText.textContent = `❌ Error: ${message}`;
+            statusDetails.textContent = '';
+            resetUI();
+        }
+        
+        function resetUI() {
+            transcribeBtn.disabled = false;
+            uploadZone.classList.remove('disabled');
+            selectedFile = null;
+            fileName.style.display = 'none';
+            fileInput.value = '';
+            currentJobId = null;
+        }
+    </script>
+</body>
+</html>
