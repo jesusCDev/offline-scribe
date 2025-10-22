@@ -9,6 +9,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     git \
     ffmpeg \
+    libavcodec-dev \
+    libavformat-dev \
+    libavdevice-dev \
+    libavutil-dev \
+    libavfilter-dev \
+    libswscale-dev \
+    libswresample-dev \
     libsndfile1 \
     libopenblas-dev \
     pkg-config \
