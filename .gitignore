@@ -17,6 +17,10 @@ data/results/*
 !data/uploads/.gitkeep
 !data/results/.gitkeep
 
+# Local models (not tracked by git by default)
+resources/models/*
+!resources/models/.gitkeep
+
 # Environment
 .env
 

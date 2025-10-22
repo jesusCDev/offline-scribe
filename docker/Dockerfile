@@ -35,7 +35,7 @@ RUN git clone --depth=1 --branch=v1.5.4 https://github.com/ggerganov/whisper.cpp
     cd whisper.cpp && \
     make -j$(nproc)
 
-# Stage 3: Fetch all models
+# Stage 3: Fetch all models (or use local if available)
 FROM base-builder AS model-fetcher
 
 # Copy model fetch script
@@ -45,8 +45,11 @@ COPY scripts/fetch_models.py /tmp/fetch_models.py
 ENV HF_HOME=/tmp/hf_cache
 RUN mkdir -p /opt/models
 
-# Fetch all models (this requires network access at build time)
-RUN python3 /tmp/fetch_models.py
+# Copy local models if they exist (build context aware)
+COPY resources/models/ /opt/models/ 2>/dev/null || true
+
+# Fetch missing models (this requires network access at build time if models not local)
+RUN python3 /tmp/fetch_models.py --skip-existing
 
 # Stage 4: Final runtime image
 FROM python:3.11-slim

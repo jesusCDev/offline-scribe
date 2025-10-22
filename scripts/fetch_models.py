@@ -114,7 +114,13 @@ def verify_models():
     print(f"\n📊 Total models size: {total_size / (1024**3):.2f} GB")
 
 if __name__ == "__main__":
+    import sys
+    skip_existing = "--skip-existing" in sys.argv
+    
     print("🚀 Starting model fetch...\n")
+    if skip_existing:
+        print("⚡ Skip-existing mode: Only downloading missing models\n")
+    
     fetch_faster_whisper_models()
     fetch_whisper_cpp_models()
     verify_models()
