@@ -14,6 +14,7 @@ from .job_manager import JobManager
 from .engines.faster_whisper_engine import FasterWhisperEngine
 from .engines.whisper_cpp_engine import WhisperCppEngine
 from .engines.llama_engine import LlamaSummarizer
+from .model_manager import ModelManager
 
 # Initialize app
 app = FastAPI(title="Silent Scribe - Air-Gapped Video Transcription")
@@ -26,6 +27,7 @@ settings.results_dir.mkdir(parents=True, exist_ok=True)
 job_manager = JobManager(settings.results_dir)
 fw_engine = FasterWhisperEngine(settings.models_dir)
 wc_engine = WhisperCppEngine(settings.models_dir)
+model_manager = ModelManager(settings.models_dir)
 
 # Initialize summarizer if available
 if SUMMARIZATION_AVAILABLE:
@@ -321,6 +323,70 @@ async def download_paragraph_summary(job_id: str):
         media_type="text/plain",
         filename=f"{job.filename}_summary_paragraph.txt"
     )
+
+# Model Management Endpoints
+@app.get("/api/models")
+async def list_models():
+    """List all available Whisper models with installation status."""
+    models = model_manager.list_models()
+    total_size = model_manager.get_total_models_size_mb()
+    return {
+        "models": models,
+        "total_size_mb": total_size
+    }
+
+@app.post("/api/models/{model_name}/download")
+async def download_model(model_name: str):
+    """Start downloading a specific model."""
+    try:
+        # Check if model is valid
+        if model_name not in model_manager.AVAILABLE_MODELS:
+            raise HTTPException(400, f"Invalid model name: {model_name}")
+        
+        # Check if already installed
+        model_info = model_manager.get_model_info(model_name)
+        if model_info and model_info.is_installed:
+            return {"status": "already_installed", "model": model_name}
+        
+        # Start download in background
+        async def download_task():
+            await model_manager.download_model(model_name)
+        
+        asyncio.create_task(download_task())
+        
+        return {"status": "downloading", "model": model_name}
+    
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except RuntimeError as e:
+        raise HTTPException(409, str(e))
+
+@app.get("/api/models/{model_name}/status")
+async def get_model_status(model_name: str):
+    """Get status of a specific model."""
+    if model_name not in model_manager.AVAILABLE_MODELS:
+        raise HTTPException(400, f"Invalid model name: {model_name}")
+    
+    model_info = model_manager.get_model_info(model_name)
+    if not model_info:
+        raise HTTPException(404, "Model not found")
+    
+    return model_info.to_dict()
+
+@app.delete("/api/models/{model_name}")
+async def delete_model(model_name: str):
+    """Delete a model to free up disk space."""
+    try:
+        success = await model_manager.delete_model(model_name)
+        if success:
+            return {"status": "deleted", "model": model_name}
+        else:
+            return {"status": "not_installed", "model": model_name}
+    
+    except ValueError as e:
+        raise HTTPException(400, str(e))
+    except Exception as e:
+        raise HTTPException(500, f"Failed to delete model: {e}")
 
 @app.get("/health")
 async def health():
