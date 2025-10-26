@@ -57,8 +57,18 @@ else
     echo "ℹ️  No .env file (speaker diarization will be disabled)"
 fi
 
+# Get version from package.json if it exists, otherwise default
+if [ -f package.json ]; then
+    IMAGE_VERSION=$(grep '"version":' package.json | head -1 | sed 's/.*"version": "\(.*\)".*/\1/')
+else
+    IMAGE_VERSION="0.1.0"
+fi
+
+BUILD_DATE=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
 echo ""
 echo "🔨 Starting Docker build..."
+echo "   Version: ${IMAGE_VERSION}"
 echo "   This will take 30-60 minutes and download:"
 echo "   - Whisper models (~15 GB)"
 echo "   - Llama 2 model (~4 GB)"
@@ -68,6 +78,8 @@ echo ""
 # Build for current architecture
 if docker build \
   --build-arg HF_TOKEN="${HF_TOKEN:-}" \
+  --build-arg IMAGE_VERSION="${IMAGE_VERSION}" \
+  --build-arg BUILD_DATE="${BUILD_DATE}" \
   --build-arg CACHEBUST=$(date +%s) \
   -t silent-scribe:latest \
   -f docker/Dockerfile \

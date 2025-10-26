@@ -1,0 +1,174 @@
+name: Build Silent Scribe
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: 'Build type'
+        required: true
+        type: choice
+        options:
+          - full
+          - lite
+        default: full
+
+env:
+  IMAGE_NAME: silent-scribe:latest
+  CONTAINER_REGISTRY: ghcr.io
+
+jobs:
+  prepare-image:
+    name: Prepare Docker Image
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event.inputs.build_type == 'full'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check disk space
+        run: |
+          df -h
+          echo "Available space:"
+          df -h / | awk 'NR==2 {print $4}'
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        run: |
+          chmod +x scripts/build.sh
+          ./scripts/build.sh
+
+      - name: Verify image
+        run: |
+          docker images ${{ env.IMAGE_NAME }}
+          docker image inspect ${{ env.IMAGE_NAME }} --format '{{index .Config.Labels "org.opencontainers.image.version"}}'
+
+      - name: Export Docker image
+        run: |
+          mkdir -p resources
+          echo "Saving Docker image to tar.gz..."
+          docker image save ${{ env.IMAGE_NAME }} | gzip -c > resources/silent-scribe.tar.gz
+          ls -lh resources/silent-scribe.tar.gz
+
+      - name: Split image into parts (GitHub artifact size limit workaround)
+        run: |
+          cd resources
+          # Split into 1.5GB parts to stay under 2GB artifact limit
+          split -b 1500M silent-scribe.tar.gz silent-scribe.tar.gz.part-
+          ls -lh silent-scribe.tar.gz.part-*
+          rm silent-scribe.tar.gz
+
+      - name: Upload image parts
+        uses: actions/upload-artifact@v4
+        with:
+          name: docker-image-parts
+          path: resources/silent-scribe.tar.gz.part-*
+          retention-days: 7
+
+  build:
+    name: Build ${{ matrix.os }}
+    needs: prepare-image
+    if: always() && (needs.prepare-image.result == 'success' || needs.prepare-image.result == 'skipped')
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux
+            script: dist:linux
+          - os: macos-latest
+            platform: mac
+            script: dist:mac
+          - os: windows-latest
+            platform: win
+            script: dist:win
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download Docker image parts (full build only)
+        if: needs.prepare-image.result == 'success'
+        uses: actions/download-artifact@v4
+        with:
+          name: docker-image-parts
+          path: resources
+
+      - name: Reassemble Docker image (full build only)
+        if: needs.prepare-image.result == 'success'
+        shell: bash
+        run: |
+          cd resources
+          cat silent-scribe.tar.gz.part-* > silent-scribe.tar.gz
+          rm silent-scribe.tar.gz.part-*
+          ls -lh silent-scribe.tar.gz
+
+      - name: Check disk space
+        shell: bash
+        run: df -h
+
+      - name: Build Electron app
+        run: npm run ${{ matrix.script }}
+
+      - name: List build artifacts
+        shell: bash
+        run: ls -lh dist/
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform }}-build
+          path: |
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.dmg
+            dist/*.exe
+            dist/*.zip
+          retention-days: 30
+
+  create-release:
+    name: Create GitHub Release
+    needs: build
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          find artifacts -type f
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            artifacts/*-build/*
+          draft: true
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

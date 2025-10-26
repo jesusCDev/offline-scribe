@@ -1,0 +1,5 @@
+[] proper logging
+[] ask question based on contxt
+[] tag items together
+[] ask questions based on group or all
+

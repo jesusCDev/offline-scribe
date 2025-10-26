@@ -73,6 +73,14 @@ RUN cp -r /opt/models_local/* /opt/models/ 2>/dev/null || true && \
 # Stage 4: Final runtime image
 FROM python:3.11-slim
 
+# Version metadata (passed as build arg)
+ARG IMAGE_VERSION=0.1.0
+ARG BUILD_DATE
+LABEL org.opencontainers.image.version="${IMAGE_VERSION}"
+LABEL org.opencontainers.image.created="${BUILD_DATE}"
+LABEL org.opencontainers.image.title="Silent Scribe"
+LABEL org.opencontainers.image.description="Air-gapped video transcription with Whisper and Llama"
+
 # Install runtime dependencies only
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \

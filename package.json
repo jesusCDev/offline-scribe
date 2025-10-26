@@ -1,0 +1,73 @@
+{
+  "name": "silent-scribe",
+  "version": "0.1.0",
+  "description": "A completely offline, air-gapped video-to-text transcription system with AI-powered summarization. Designed for sensitive data that requires maximum security with zero internet access.",
+  "main": "electron/main.js",
+  "private": true,
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "scripts": {
+    "dev": "NODE_ENV=development electron .",
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
+    "dist:linux": "electron-builder -l appimage deb",
+    "dist:mac": "electron-builder -m",
+    "dist:win": "electron-builder -w",
+    "image:save": "bash scripts/save-image.sh",
+    "postinstall": "electron-builder install-app-deps",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["transcription", "whisper", "air-gapped", "offline", "privacy", "security"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^33.4.11",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.silent-scribe.app",
+    "productName": "Silent Scribe",
+    "files": [
+      "electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "resources/**"
+    ],
+    "extraResources": [
+      {
+        "from": "resources",
+        "to": "resources",
+        "filter": ["**/*", "!models/**"]
+      }
+    ],
+    "mac": {
+      "target": ["dmg"],
+      "category": "public.app-category.productivity",
+      "icon": "electron/assets/icon.png",
+      "artifactName": "${productName}-${version}-mac-${arch}.${ext}",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Utility",
+      "icon": "electron/assets",
+      "artifactName": "${productName}-${version}-linux-${arch}.${ext}"
+    },
+    "win": {
+      "target": ["nsis"],
+      "icon": "electron/assets/icon.png",
+      "artifactName": "${productName}-${version}-win-${arch}.${ext}",
+      "publisherName": "Silent Scribe"
+    },
+    "directories": {
+      "buildResources": "electron/assets",
+      "output": "dist"
+    }
+  }
+}

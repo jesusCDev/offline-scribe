@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline';">
+    <title>Silent Scribe - Loading</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            padding: 40px;
+            width: 90%;
+            max-width: 550px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            text-align: center;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .status-section {
+            margin-bottom: 25px;
+        }
+
+        .status-label {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #34495e;
+        }
+
+        .status-message {
+            font-size: 13px;
+            color: #7f8c8d;
+            min-height: 20px;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .spinner {
+            border: 3px solid #ecf0f1;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-box {
+            background: #fee;
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .error-box.show {
+            display: block;
+        }
+
+        .error-title {
+            font-weight: 600;
+            color: #c0392b;
+            margin-bottom: 8px;
+        }
+
+        .error-message {
+            font-size: 13px;
+            color: #e74c3c;
+        }
+
+        .actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #bdc3c7;
+        }
+
+        .btn-link {
+            background: transparent;
+            color: #667eea;
+            text-decoration: underline;
+            padding: 8px;
+        }
+
+        .info-box {
+            background: #e8f4fd;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 13px;
+            display: none;
+        }
+
+        .info-box.show {
+            display: block;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .ready-icon {
+            text-align: center;
+            font-size: 48px;
+            margin: 20px 0;
+        }
+
+        .system-info {
+            font-size: 11px;
+            color: #95a5a6;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #ecf0f1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤫 Silent Scribe</h1>
+        <p class="subtitle">Air-Gapped Video Transcription</p>
+
+        <!-- Error Display -->
+        <div id="errorBox" class="error-box">
+            <div class="error-title">⚠️ Error</div>
+            <div id="errorMessage" class="error-message"></div>
+        </div>
+
+        <!-- Info Display -->
+        <div id="infoBox" class="info-box">
+            <div id="infoMessage"></div>
+        </div>
+
+        <!-- Status Section -->
+        <div class="status-section">
+            <div class="status-label" id="statusLabel">Initializing...</div>
+            <div class="status-message" id="statusMessage">Please wait...</div>
+            
+            <!-- Progress Bar -->
+            <div id="progressBar" class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+
+            <!-- Spinner -->
+            <div id="spinner" class="spinner"></div>
+        </div>
+
+        <!-- Ready State -->
+        <div id="readyState" class="hidden">
+            <div class="ready-icon">✅</div>
+            <p style="text-align: center; color: #27ae60; font-weight: 600; margin-bottom: 20px;">
+                Application is ready!
+            </p>
+        </div>
+
+        <!-- Action Buttons -->
+        <div id="actions" class="actions">
+            <!-- Buttons will be added dynamically -->
+        </div>
+
+        <!-- System Info -->
+        <div id="systemInfo" class="system-info"></div>
+    </div>
+
+    <script>
+        // State management
+        let currentStage = 'init';
+        let systemInfo = null;
+
+        // Get system info on load
+        (async () => {
+            systemInfo = await window.electronAPI.getSystemInfo();
+            document.getElementById('systemInfo').textContent = 
+                `Platform: ${systemInfo.platform} | Arch: ${systemInfo.arch} | Dev: ${systemInfo.isDevelopment}`;
+            
+            // Start initialization workflow
+            await initializeApp();
+        })();
+
+        // Listen for status updates from main process
+        window.electronAPI.onStatus((status) => {
+            console.log('Status update:', status);
+            updateStatus(status.stage, status.message, status.progress, status.error);
+        });
+
+        // Update UI based on status
+        function updateStatus(stage, message, progress = null, error = null) {
+            currentStage = stage;
+
+            const statusLabel = document.getElementById('statusLabel');
+            const statusMessage = document.getElementById('statusMessage');
+            const progressFill = document.getElementById('progressFill');
+            const spinner = document.getElementById('spinner');
+            const errorBox = document.getElementById('errorBox');
+            const errorMessage = document.getElementById('errorMessage');
+            const readyState = document.getElementById('readyState');
+
+            statusLabel.textContent = formatStage(stage);
+            statusMessage.textContent = message;
+
+            if (progress !== null) {
+                progressFill.style.width = `${progress}%`;
+                spinner.style.display = 'none';
+            } else {
+                spinner.style.display = 'block';
+            }
+
+            if (error) {
+                errorBox.classList.add('show');
+                errorMessage.textContent = error;
+            } else {
+                errorBox.classList.remove('show');
+            }
+
+            if (stage === 'ready') {
+                spinner.style.display = 'none';
+                progressFill.style.width = '100%';
+                readyState.classList.remove('hidden');
+            } else {
+                readyState.classList.add('hidden');
+            }
+        }
+
+        // Format stage name for display
+        function formatStage(stage) {
+            const stageNames = {
+                'init': 'Initializing...',
+                'checking-docker': 'Checking Docker...',
+                'docker-not-found': 'Docker Not Found',
+                'docker-not-running': 'Docker Not Running',
+                'checking-image': 'Checking Image...',
+                'checking-version': 'Verifying Image Version...',
+                'image-missing': 'Image Not Found',
+                'image-outdated': 'Image Update Available',
+                'loading-image': 'Loading Docker Image...',
+                'building-image': 'Building Docker Image...',
+                'starting-container': 'Starting Container...',
+                'waiting-ready': 'Waiting for Service...',
+                'ready': 'Ready!',
+                'error': 'Error'
+            };
+            return stageNames[stage] || stage;
+        }
+
+        // Show action buttons
+        function showActions(buttons) {
+            const actionsDiv = document.getElementById('actions');
+            actionsDiv.innerHTML = '';
+
+            buttons.forEach(btn => {
+                const button = document.createElement('button');
+                button.className = `btn ${btn.class || 'btn-secondary'}`;
+                button.textContent = btn.text;
+                button.disabled = btn.disabled || false;
+                button.onclick = btn.onClick;
+                actionsDiv.appendChild(button);
+            });
+        }
+
+        // Main initialization workflow
+        async function initializeApp() {
+            try {
+                // Step 1: Check Docker
+                updateStatus('checking-docker', 'Checking if Docker is installed and running...');
+                const dockerCheck = await window.electronAPI.checkDocker();
+
+                if (!dockerCheck.success) {
+                    if (dockerCheck.error.includes('not installed')) {
+                        await handleDockerNotInstalled();
+                    } else if (dockerCheck.error.includes('not running')) {
+                        await handleDockerNotRunning();
+                    } else {
+                        showError('Docker check failed', dockerCheck.error);
+                    }
+                    return;
+                }
+
+                // Step 2: Check if image exists
+                updateStatus('checking-image', 'Checking for Docker image...');
+                const imageCheck = await window.electronAPI.imageExists();
+
+                if (!imageCheck.exists) {
+                    await handleImageMissing();
+                    return;
+                }
+
+                // Step 2.5: Check image version
+                updateStatus('checking-version', 'Verifying image version...');
+                const versionCheck = await window.electronAPI.checkImageVersion();
+
+                if (versionCheck.needsUpdate) {
+                    await handleImageOutdated(versionCheck);
+                    return;
+                }
+
+                // Step 3: Start container
+                await startContainerFlow();
+
+            } catch (error) {
+                showError('Initialization failed', error.message);
+            }
+        }
+
+        // Handle Docker not installed
+        async function handleDockerNotInstalled() {
+            updateStatus('docker-not-found', 'Docker is not installed on this system', 0);
+            
+            const platform = systemInfo.platform;
+            const buttons = [];
+
+            if (platform === 'darwin' || platform === 'win32') {
+                buttons.push({
+                    text: '📥 Download Docker Desktop',
+                    class: 'btn-primary',
+                    onClick: () => {
+                        const url = platform === 'darwin' 
+                            ? 'https://www.docker.com/products/docker-desktop'
+                            : 'https://www.docker.com/products/docker-desktop';
+                        require('electron').shell.openExternal(url);
+                    }
+                });
+            } else {
+                buttons.push({
+                    text: '📥 Install Docker Engine (Linux)',
+                    class: 'btn-primary',
+                    onClick: () => {
+                        require('electron').shell.openExternal('https://docs.docker.com/engine/install/');
+                    }
+                });
+            }
+
+            buttons.push({
+                text: '🔄 Retry',
+                class: 'btn-secondary',
+                onClick: () => initializeApp()
+            });
+
+            showActions(buttons);
+            showInfo('Please install Docker and click Retry');
+        }
+
+        // Handle Docker not running
+        async function handleDockerNotRunning() {
+            updateStatus('docker-not-running', 'Docker is installed but not running', 0);
+
+            const buttons = [];
+            const platform = systemInfo.platform;
+
+            // All platforms get a "Start Docker" button
+            buttons.push({
+                text: '▶️ Start Docker Desktop',
+                class: 'btn-primary',
+                onClick: async () => {
+                    const result = await window.electronAPI.startDocker();
+                    if (result.success) {
+                        showInfo(result.message);
+                        // Wait longer on first start
+                        setTimeout(() => initializeApp(), 10000);
+                    } else {
+                        showError('Could not auto-start Docker', result.message);
+                    }
+                }
+            });
+
+            buttons.push({
+                text: '🔄 Retry',
+                class: 'btn-secondary',
+                onClick: () => initializeApp()
+            });
+
+            showActions(buttons);
+            
+            // Platform-specific hints
+            if (platform === 'linux') {
+                showInfo('Attempting to start Docker Desktop. If it fails, you can start it manually from your app menu or run: systemctl --user start docker-desktop');
+            } else {
+                showInfo('Docker Desktop will start automatically. Please wait 30-60 seconds.');
+            }
+        }
+
+        // Handle outdated image
+        async function handleImageOutdated(versionInfo) {
+            updateStatus('image-outdated', versionInfo.message, 0);
+
+            const message = `
+                Current Version: ${versionInfo.currentVersion || 'Unknown'}<br>
+                Expected Version: ${versionInfo.expectedVersion}<br><br>
+                ${versionInfo.updateInstructions || 'Please load the new Docker image to continue.'}
+            `;
+            
+            showInfo(message);
+
+            showActions([
+                {
+                    text: '📦 Load New Image (~15-20 GB, 10-20 min)',
+                    class: 'btn-primary',
+                    onClick: async () => await loadImageFlow()
+                },
+                {
+                    text: '⏭️ Continue with Current Version',
+                    class: 'btn-secondary',
+                    onClick: async () => await startContainerFlow()
+                }
+            ]);
+        }
+
+        // Handle image missing
+        async function handleImageMissing() {
+            updateStatus('image-missing', 'Docker image not found', 0);
+
+            showActions([
+                {
+                    text: '📦 Load Bundled Image (~15-20 GB, 10-20 min)',
+                    class: 'btn-primary',
+                    onClick: async () => await loadImageFlow()
+                },
+                {
+                    text: '🔨 Build from Source (30-60 min)',
+                    class: 'btn-secondary',
+                    onClick: async () => await buildImageFlow()
+                }
+            ]);
+
+            showInfo('Choose how to obtain the Docker image. Loading from bundle is faster if available.');
+        }
+
+        // Load image flow
+        async function loadImageFlow() {
+            try {
+                showActions([]);
+                const result = await window.electronAPI.loadImage();
+                
+                if (result.success) {
+                    updateStatus('image-loaded', 'Image loaded successfully!', 100);
+                    setTimeout(() => startContainerFlow(), 1000);
+                } else {
+                    showError('Image load failed', result.error);
+                    showActions([
+                        {
+                            text: '🔄 Retry',
+                            class: 'btn-secondary',
+                            onClick: () => initializeApp()
+                        }
+                    ]);
+                }
+            } catch (error) {
+                showError('Load failed', error.message);
+            }
+        }
+
+        // Build image flow
+        async function buildImageFlow() {
+            try {
+                showActions([]);
+                const result = await window.electronAPI.buildImage();
+                
+                if (result.success) {
+                    updateStatus('image-built', 'Image built successfully!', 100);
+                    setTimeout(() => startContainerFlow(), 1000);
+                } else {
+                    showError('Build failed', result.error);
+                    showActions([
+                        {
+                            text: '🔄 Retry',
+                            class: 'btn-secondary',
+                            onClick: () => initializeApp()
+                        }
+                    ]);
+                }
+            } catch (error) {
+                showError('Build failed', error.message);
+            }
+        }
+
+        // Start container flow
+        async function startContainerFlow() {
+            try {
+                const result = await window.electronAPI.startContainer();
+                
+                if (result.success) {
+                    updateStatus('ready', `Application ready on port ${result.port}!`, 100);
+                    
+                    // Auto-open main window
+                    setTimeout(async () => {
+                        await window.electronAPI.openMainWindow();
+                    }, 500);
+
+                    // Show control buttons
+                    showActions([
+                        {
+                            text: '🌐 Open App',
+                            class: 'btn-primary',
+                            onClick: async () => {
+                                await window.electronAPI.openMainWindow();
+                            }
+                        },
+                        {
+                            text: '⏹️ Stop Container',
+                            class: 'btn-secondary',
+                            onClick: async () => {
+                                await window.electronAPI.stopContainer();
+                                updateStatus('stopped', 'Container stopped', 0);
+                                showActions([
+                                    {
+                                        text: '▶️ Restart',
+                                        class: 'btn-primary',
+                                        onClick: () => initializeApp()
+                                    }
+                                ]);
+                            }
+                        }
+                    ]);
+                } else {
+                    showError('Container start failed', result.error);
+                    showActions([
+                        {
+                            text: '🔄 Retry',
+                            class: 'btn-secondary',
+                            onClick: () => startContainerFlow()
+                        }
+                    ]);
+                }
+            } catch (error) {
+                showError('Start failed', error.message);
+            }
+        }
+
+        // Helper functions
+        function showError(title, message) {
+            const errorBox = document.getElementById('errorBox');
+            const errorMessage = document.getElementById('errorMessage');
+            errorBox.querySelector('.error-title').textContent = `⚠️ ${title}`;
+            errorMessage.textContent = message;
+            errorBox.classList.add('show');
+        }
+
+        function showInfo(message) {
+            const infoBox = document.getElementById('infoBox');
+            const infoMessage = document.getElementById('infoMessage');
+            infoMessage.innerHTML = message;  // Support HTML content
+            infoBox.classList.add('show');
+        }
+    </script>
+</body>
+</html>

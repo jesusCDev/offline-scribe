@@ -1,0 +1,5 @@
+{
+  "expectedVersion": "0.1.0",
+  "description": "Expected Docker image version for this Electron app release",
+  "updateInstructions": "A new Docker image is bundled with this update. Please load it to get the latest models and features."
+}

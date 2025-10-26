@@ -1,0 +1,24 @@
+<svg width="1024" height="1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3498db;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#2c3e50;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background circle -->
+  <circle cx="512" cy="512" r="480" fill="url(#grad)"/>
+  
+  <!-- Microphone icon (silent/muted) -->
+  <g transform="translate(512, 512)">
+    <!-- Mic body -->
+    <rect x="-60" y="-180" width="120" height="200" rx="60" fill="white" opacity="0.9"/>
+    <!-- Mic stand -->
+    <path d="M 0 60 L 0 160 M -100 160 L 100 160" stroke="white" stroke-width="24" stroke-linecap="round" fill="none" opacity="0.9"/>
+    <!-- Mute slash -->
+    <line x1="-150" y1="-220" x2="150" y2="220" stroke="#e74c3c" stroke-width="32" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Text hint -->
+  <text x="512" y="920" font-family="Arial, sans-serif" font-size="80" font-weight="bold" fill="white" text-anchor="middle">SILENT SCRIBE</text>
+</svg>
