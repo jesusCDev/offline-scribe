@@ -109,6 +109,9 @@ COPY --from=model-fetcher /opt/models /opt/models
 COPY app /app
 COPY .env.example /.env
 
+# Copy fetch script to /tmp for runtime model downloads
+COPY scripts/fetch_models.py /tmp/fetch_models.py
+
 # Create non-root user
 RUN useradd -m -u 1000 appuser && \
     mkdir -p /data/uploads /data/results && \
