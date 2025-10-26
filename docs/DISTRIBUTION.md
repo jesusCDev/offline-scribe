@@ -115,25 +115,46 @@ docker image inspect silent-scribe:latest --format '{{index .Config.Labels "org.
 **Time:** 30-60 minutes  
 **Disk:** ~27 GB
 
-### Step 3: Export Docker Image
+### Step 3: Push Docker Image to GitHub Container Registry
+
+**3.1 Create GitHub Personal Access Token**
+
+First time only:
+1. Go to: https://github.com/settings/tokens
+2. Click "Generate new token (classic)"
+3. Scopes: `write:packages`, `read:packages`
+4. Save token securely
+
+**3.2 Login to GHCR**
 
 ```bash
-npm run image:save
+export GITHUB_TOKEN="your_token_here"
+echo $GITHUB_TOKEN | docker login ghcr.io -u YOUR_USERNAME --password-stdin
+```
+
+**3.3 Push Image**
+
+```bash
+npm run image:push
 ```
 
 **Verify:**
-```bash
-ls -lh resources/silent-scribe.tar.gz
-# Should be ~15-20 GB
-```
+- Go to: https://github.com/YOUR_USERNAME/offline-scribe/pkgs/container/offline-scribe
+- Make package **public** (Settings → Change visibility)
 
-**Time:** 5-15 minutes  
-**Disk:** Additional ~15-20 GB
+**Time:** 10-20 minutes (uploads ~15-20 GB)  
+**Required:** Once per new version
 
 ### Step 4: Build Electron Apps
 
 #### Option A: Build Locally (Linux only)
 
+**4.1 Export image locally:**
+```bash
+npm run image:save
+```
+
+**4.2 Build packages:**
 ```bash
 npm run dist:linux
 ```
@@ -142,9 +163,11 @@ npm run dist:linux
 - `dist/Silent Scribe-0.2.0-linux-x64.AppImage`
 - `dist/Silent Scribe_0.2.0_amd64.deb`
 
-**Time:** 10-20 minutes
+**Time:** 15-30 minutes total
 
-#### Option B: Build via GitHub Actions (All platforms)
+#### Option B: Build via GitHub Actions (All platforms - Recommended)
+
+GitHub Actions automatically pulls your pre-built image from GHCR and builds for all platforms.
 
 See "GitHub Actions" section below.
 
@@ -254,30 +277,75 @@ Email, USB drive, or secure file transfer to specific users.
 
 ### Overview
 
-GitHub Actions can automatically build packages for all platforms when you push a tag.
+GitHub Actions automatically builds packages for **Linux, macOS, and Windows** by:
+1. Pulling your pre-built Docker image from GitHub Container Registry (GHCR)
+2. Packaging it with Electron for each platform
+3. Creating a draft GitHub Release with all installers
 
-### Workflow File
+**Advantages:**
+- ✅ No need for Mac or Windows machines
+- ✅ Builds all platforms in parallel
+- ✅ Automatic draft releases
+- ✅ Avoids GitHub's disk space limits (image pre-built locally)
 
-Create `.github/workflows/build.yml` (see task list for full implementation).
+### Prerequisites
 
-### Trigger
+1. Docker image pushed to GHCR (Step 3 above)
+2. GHCR package set to **public** visibility
+
+### Workflow
+
+The workflow is at `.github/workflows/build.yml` and runs on:
+- **Tag push**: `v*` (e.g., `v0.2.0`)
+- **Manual**: Actions tab → "Build Silent Scribe" → Run workflow
+
+### Trigger Release Build
 
 ```bash
+# After pushing image to GHCR:
 git tag -a v0.2.0 -m "Release v0.2.0"
 git push origin --tags
 ```
 
-### Artifacts
+### Monitor Progress
 
-After workflow completes, download artifacts from:
-```
-https://github.com/YOUR_USERNAME/silent-scribe/actions
-```
+1. Go to: https://github.com/YOUR_USERNAME/offline-scribe/actions
+2. Click the running workflow
+3. Watch the three parallel build jobs (Linux, macOS, Windows)
 
-### Limitations
+**Time:** 20-30 minutes total
 
-- **Artifact size limit:** GitHub has 2GB artifact limit
-- **Solution:** Split Docker image into parts during CI
+### Download Artifacts
+
+After workflow completes:
+
+**Option 1: From GitHub Release (automatic)**
+- Go to: https://github.com/YOUR_USERNAME/offline-scribe/releases
+- Find the draft release
+- Review and publish
+
+**Option 2: From Actions artifacts**
+- Go to the completed workflow
+- Download `linux-build`, `mac-build`, `windows-build` artifacts
+
+### Build Modes
+
+**Full (default):** Bundles Docker image (~15-20 GB per platform)
+**Lite:** App only, no image (future feature)
+
+### Troubleshooting
+
+**Error: "Cannot pull image"**
+- Ensure GHCR package is public
+- Verify image exists: `docker pull ghcr.io/YOUR_USERNAME/offline-scribe:latest`
+
+**Error: "Insufficient disk space"**
+- GitHub runners have limited space after pulling the image
+- This is expected; image is split and reassembled automatically
+
+**Build fails on specific platform:**
+- Check the specific platform job logs
+- Verify electron-builder configuration in package.json
 
 ---
 

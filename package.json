@@ -17,8 +17,9 @@
     "dist:mac": "electron-builder -m",
     "dist:win": "electron-builder -w",
     "image:save": "bash scripts/save-image.sh",
-    "postinstall": "electron-builder install-app-deps",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "image:push": "bash scripts/push-image.sh",
+    "postinstall": "electron-builder install-app-deps"
+  },
   },
   "keywords": ["transcription", "whisper", "air-gapped", "offline", "privacy", "security"],
   "author": "",
