@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     
     app_port: int = 7860
     default_engine: str = "faster-whisper"
-    default_model: str = "small"
+    default_model: str = "tiny"  # Shipped by default, users can download others
     default_compute_type: str = "int8"  # Most compatible option
     default_threads: int = os.cpu_count() or 4
     results_keep_days: int = 30

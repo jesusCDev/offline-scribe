@@ -46,7 +46,7 @@ RUN git clone --depth=1 --branch=b3864 https://github.com/ggerganov/llama.cpp.gi
     mkdir -p /usr/local/bin/llama && \
     cp build/bin/llama-cli /usr/local/bin/llama/llama-cli 2>/dev/null || cp build/bin/main /usr/local/bin/llama/llama-cli
 
-# Stage 3: Fetch all models (or use local if available)
+# Stage 3: Fetch only tiny model by default (users can download more at runtime)
 FROM base-builder AS model-fetcher
 
 # Copy model fetch script
@@ -66,9 +66,10 @@ ENV HF_TOKEN=${HF_TOKEN}
 # Cache busting arg to force rebuild when needed
 ARG CACHEBUST=1
 
-# Copy any local models first (if they exist), then fetch missing ones
+# Only fetch tiny model by default to keep image small
+# Users can download additional models via the app's model management UI
 RUN cp -r /opt/models_local/* /opt/models/ 2>/dev/null || true && \
-    python3 /tmp/fetch_models.py --skip-existing
+    python3 /tmp/fetch_models.py --models tiny --skip-existing
 
 # Stage 4: Final runtime image
 FROM python:3.11-slim
