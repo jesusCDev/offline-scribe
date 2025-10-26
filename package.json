@@ -20,7 +20,6 @@
     "image:push": "bash scripts/push-image.sh",
     "postinstall": "electron-builder install-app-deps"
   },
-  },
   "keywords": ["transcription", "whisper", "air-gapped", "offline", "privacy", "security"],
   "author": "",
   "license": "MIT",

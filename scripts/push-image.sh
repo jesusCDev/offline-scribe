@@ -30,7 +30,7 @@ echo ""
 
 # Check if logged in to GHCR
 echo "🔐 Checking GitHub Container Registry authentication..."
-if ! docker info 2>/dev/null | grep -q "ghcr.io"; then
+if ! grep -q "ghcr.io" ~/.docker/config.json 2>/dev/null; then
     echo "⚠️  Not logged in to GitHub Container Registry."
     echo ""
     echo "Please login with:"
