@@ -675,6 +675,35 @@
             margin-bottom: 5px;
         }
         
+        .downloading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #e9ecef;
+            border-top-color: #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        .progress-bar.indeterminate .progress-fill {
+            width: 100%;
+            background: linear-gradient(90deg, 
+                #3498db 0%, 
+                #5dade2 25%, 
+                #3498db 50%, 
+                #5dade2 75%, 
+                #3498db 100%);
+            background-size: 200% 100%;
+            animation: indeterminate-progress 1.5s linear infinite;
+        }
+        
+        @keyframes indeterminate-progress {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
         .models-notice {
             padding: 15px;
             border-radius: 4px;
@@ -1728,9 +1757,12 @@
                 // Start polling for download status
                 statusEl.innerHTML = `
                     <div class="model-progress">
-                        <div class="model-progress-text">💼 Downloading...</div>
-                        <div class="progress-bar">
-                            <div id="model-progress-fill-${modelName}" class="progress-fill" style="width: 0%"></div>
+                        <div class="model-progress-text">
+                            <span class="downloading-spinner"></span>
+                            Downloading both engines... This may take several minutes.
+                        </div>
+                        <div class="progress-bar indeterminate">
+                            <div class="progress-fill"></div>
                         </div>
                     </div>
                 `;
