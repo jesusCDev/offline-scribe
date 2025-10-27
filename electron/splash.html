@@ -201,6 +201,82 @@
             padding-top: 15px;
             border-top: 1px solid #ecf0f1;
         }
+
+        /* Offline Mode Toggle */
+        .settings-section {
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+        }
+
+        .toggle-label {
+            font-size: 13px;
+            color: #34495e;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .toggle-label-main {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .toggle-label-sub {
+            font-size: 11px;
+            color: #7f8c8d;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ecf0f1;
+            transition: 0.3s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: #e74c3c;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
     </style>
 </head>
 <body>
@@ -246,6 +322,20 @@
             <!-- Buttons will be added dynamically -->
         </div>
 
+        <!-- Settings Section -->
+        <div class="settings-section">
+            <div class="toggle-container">
+                <div class="toggle-label">
+                    <div class="toggle-label-main">🔒 Air-Gapped Mode</div>
+                    <div class="toggle-label-sub">Disable internet access for model downloads</div>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="offlineModeToggle" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
         <!-- System Info -->
         <div id="systemInfo" class="system-info"></div>
     </div>
@@ -261,6 +351,10 @@
             document.getElementById('systemInfo').textContent = 
                 `Platform: ${systemInfo.platform} | Arch: ${systemInfo.arch} | Dev: ${systemInfo.isDevelopment}`;
             
+            // Load offline mode setting
+            const offlineSetting = await window.electronAPI.getOfflineMode();
+            document.getElementById('offlineModeToggle').checked = offlineSetting.offlineMode;
+            
             // Start initialization workflow
             await initializeApp();
         })();
@@ -269,6 +363,36 @@
         window.electronAPI.onStatus((status) => {
             console.log('Status update:', status);
             updateStatus(status.stage, status.message, status.progress, status.error);
+        });
+
+        // Handle offline mode toggle
+        document.getElementById('offlineModeToggle').addEventListener('change', async (e) => {
+            const offlineMode = e.target.checked;
+            console.log('Offline mode changed to:', offlineMode);
+            
+            try {
+                const result = await window.electronAPI.setOfflineMode(offlineMode);
+                
+                if (result.success) {
+                    console.log('Offline mode updated successfully');
+                    if (currentStage === 'ready') {
+                        // Show info that container was restarted
+                        showInfo(offlineMode ? 
+                            '🔒 Air-gapped mode enabled. Container restarted.' : 
+                            '🌐 Internet access enabled. Container restarted. You can now download additional models.');
+                    }
+                } else {
+                    console.error('Failed to update offline mode:', result.error);
+                    showError('Settings Error', result.error || 'Failed to update offline mode');
+                    // Revert toggle
+                    e.target.checked = !offlineMode;
+                }
+            } catch (error) {
+                console.error('Error updating offline mode:', error);
+                showError('Settings Error', error.message);
+                // Revert toggle
+                e.target.checked = !offlineMode;
+            }
         });
 
         // Update UI based on status
