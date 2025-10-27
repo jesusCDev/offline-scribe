@@ -19,7 +19,7 @@
   "keywords": ["transcription", "whisper", "air-gapped", "offline", "privacy", "security"],
   "author": {
     "name": "Silent Scribe",
-    "email": "dev@silent-scribe.local"
+    "email": "jesuscdev@gmail.com"
   },
   "license": "MIT",
   "devDependencies": {
