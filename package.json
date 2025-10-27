@@ -26,6 +26,7 @@
   "build": {
     "appId": "com.silent-scribe.app",
     "productName": "Silent Scribe",
+    "publish": null,
     "files": [
       "electron/**/*",
       "package.json"
