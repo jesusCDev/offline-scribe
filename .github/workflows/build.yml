@@ -129,6 +129,8 @@ jobs:
 
       - name: Build Electron app
         run: npm run ${{ matrix.script }}
+        env:
+          ELECTRON_BUILDER_SKIP_PUBLISH: true
 
       - name: List build artifacts
         shell: bash
