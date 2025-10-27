@@ -24,6 +24,9 @@ jobs:
     name: Pull and Package Docker Image
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event.inputs.build_type == 'full'
+    permissions:
+      contents: read
+      packages: read
     
     steps:
       - name: Checkout repository
