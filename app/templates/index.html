@@ -518,27 +518,28 @@
         
         .tab-btn {
             padding: 12px 24px;
-            background: transparent;
+            background: #e9ecef;
             border: none;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: 700;
             font-size: 15px;
-            color: #7f8c8d;
+            color: #495057;
             transition: all 0.3s;
-            border-bottom: 3px solid transparent;
+            border-bottom: 4px solid transparent;
             position: relative;
             top: 2px;
+            border-radius: 4px 4px 0 0;
         }
         
         .tab-btn:hover {
-            color: #3498db;
-            background: #f8f9fa;
+            color: #2c3e50;
+            background: #dee2e6;
         }
         
         .tab-btn.active {
-            color: #3498db;
-            border-bottom-color: #3498db;
-            background: white;
+            color: #ffffff;
+            background: #3498db;
+            border-bottom-color: #2980b9;
         }
         
         .tab-content {
@@ -934,6 +935,9 @@
         
         // Load config when page loads
         loadConfig();
+        
+        // Load available models and update dropdown
+        loadAvailableModelsForDropdown();
         
         // Attach settings listeners
         attachSettingsListeners();
@@ -1593,10 +1597,13 @@
                 // Render models
                 modelsListEl.innerHTML = models.map(model => createModelCard(model)).join('');
                 
+                // Update model select dropdown to disable unavailable models
+                updateModelSelectOptions(models);
+                
                 // Show info notice
                 noticeEl.innerHTML = `
                     <div class="models-notice info">
-                        ℹ️ <strong>Note:</strong> The 'tiny' model cannot be deleted as it's the minimum required model. Downloads happen in the background.
+                        ℹ️ <strong>Note:</strong> Each model includes both engines (faster-whisper + whisper.cpp). The 'tiny' model cannot be deleted as it's the minimum required. Downloads may take several minutes depending on model size.
                     </div>
                 `;
                 
@@ -1628,20 +1635,21 @@
                     </div>
                     <div class="model-size">
                         ${sizeLabel}: <strong>${size} MB</strong>
+                        ${!installed ? '<div style="font-size: 12px; color: #6c757d; margin-top: 4px;">Includes both faster-whisper & whisper.cpp</div>' : ''}
                     </div>
                     <div class="model-actions">
                         ${!installed ? `
                             <button class="btn-download" onclick="downloadModel('${model.name}')">
-                                ⬇️ Download
+                                ⬇️ Download Both Engines
                             </button>
                         ` : ''}
                         ${installed && canDelete ? `
-                            <button class="btn btn-delete" onclick="deleteModel('${model.name}')">
+                            <button class="btn btn-delete btn-small" onclick="deleteModel('${model.name}')">
                                 🗑️ Delete
                             </button>
                         ` : ''}
                         ${installed && !canDelete ? `
-                            <div class="model-status-text">🔒 Cannot be deleted (minimum required model)</div>
+                            <div class="model-status-text">🔒 Required (cannot delete)</div>
                         ` : ''}
                     </div>
                     <div id="model-status-${model.name}"></div>
@@ -1768,7 +1776,69 @@
                 console.error('Delete failed:', error);
                 statusEl.innerHTML = `<div class="model-status-text" style="color: #dc3545;">❌ ${error.message}</div>`;
                 // Re-enable delete button
-                actionsEl.innerHTML = `<button class="btn btn-delete" onclick="deleteModel('${modelName}')">🗑️ Delete</button>`;
+                actionsEl.innerHTML = `<button class="btn btn-delete btn-small" onclick="deleteModel('${modelName}')">🗑️ Delete</button>`;
+            }
+        }
+        
+        // Load available models for dropdown on page load
+        async function loadAvailableModelsForDropdown() {
+            try {
+                const response = await fetch('/api/models');
+                if (!response.ok) return; // Silently fail on page load
+                
+                const data = await response.json();
+                updateModelSelectOptions(data.models);
+            } catch (error) {
+                console.error('Failed to load models for dropdown:', error);
+                // Don't show error on page load, just keep default options
+            }
+        }
+        
+        // Update model select dropdown to show only installed models
+        function updateModelSelectOptions(models) {
+            const modelSelect = document.getElementById('model');
+            if (!modelSelect) return;
+            
+            // Get current value
+            const currentValue = modelSelect.value;
+            
+            // Clear and rebuild options
+            modelSelect.innerHTML = '';
+            
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.name;
+                
+                // Set text based on installation status
+                if (model.installed) {
+                    if (model.name === 'tiny') {
+                        option.textContent = `${model.name} (fastest)`;
+                    } else if (model.name === 'small') {
+                        option.textContent = `${model.name} (recommended)`;
+                    } else if (model.name === 'large-v3') {
+                        option.textContent = `${model.name} (best quality)`;
+                    } else {
+                        option.textContent = model.name;
+                    }
+                } else {
+                    option.textContent = `${model.name} - Not Downloaded`;
+                    option.disabled = true;
+                    option.style.color = '#999';
+                }
+                
+                modelSelect.appendChild(option);
+            });
+            
+            // Restore previous selection if still valid, otherwise select first installed
+            const currentOption = Array.from(modelSelect.options).find(opt => opt.value === currentValue && !opt.disabled);
+            if (currentOption) {
+                modelSelect.value = currentValue;
+            } else {
+                // Select first installed model
+                const firstInstalled = Array.from(modelSelect.options).find(opt => !opt.disabled);
+                if (firstInstalled) {
+                    modelSelect.value = firstInstalled.value;
+                }
             }
         }
     </script>
