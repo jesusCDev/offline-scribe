@@ -507,6 +507,197 @@
             border-radius: 4px;
             font-size: 13px;
         }
+        
+        /* Tab Navigation */
+        .tab-bar {
+            display: flex;
+            gap: 0;
+            border-bottom: 2px solid #ecf0f1;
+            margin-bottom: 25px;
+        }
+        
+        .tab-btn {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 15px;
+            color: #7f8c8d;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            position: relative;
+            top: 2px;
+        }
+        
+        .tab-btn:hover {
+            color: #3498db;
+            background: #f8f9fa;
+        }
+        
+        .tab-btn.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+            background: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Model Management */
+        .models-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .models-header h2 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        
+        .models-disk-usage {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .models-disk-usage strong {
+            color: #3498db;
+            font-size: 16px;
+        }
+        
+        .models-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .model-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            transition: all 0.3s;
+        }
+        
+        .model-card:hover {
+            border-color: #3498db;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+        }
+        
+        .model-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .model-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c3e50;
+            text-transform: capitalize;
+        }
+        
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-muted {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+        
+        .model-size {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+        
+        .model-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-download {
+            flex: 1;
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-download:hover:not(:disabled) {
+            background: #218838;
+        }
+        
+        .btn-download:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .model-status-text {
+            font-size: 13px;
+            color: #6c757d;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        .model-progress {
+            margin-top: 10px;
+        }
+        
+        .model-progress-text {
+            font-size: 13px;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+        
+        .models-notice {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .models-notice.info {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            color: #0c5460;
+        }
+        
+        .models-notice.error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .models-loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
     </style>
 </head>
 <body>
@@ -518,6 +709,15 @@
             🔒 <strong>Offline Mode:</strong> This application runs completely offline with no internet access for maximum security.
         </div>
         
+        <!-- Tab Navigation -->
+        <div class="tab-bar" role="tablist">
+            <button id="tabTranscribeBtn" class="tab-btn active" role="tab" aria-selected="true" aria-controls="transcribeTab">🎬 Transcribe</button>
+            <button id="tabHistoryBtn" class="tab-btn" role="tab" aria-selected="false" aria-controls="historyTab">📚 History</button>
+            <button id="tabModelsBtn" class="tab-btn" role="tab" aria-selected="false" aria-controls="modelsTab">🧠 Models</button>
+        </div>
+        
+        <!-- Transcribe Tab -->
+        <div id="transcribeTab" class="tab-content active" role="tabpanel" aria-labelledby="tabTranscribeBtn">
         <div id="uploadZone" class="upload-zone">
             <div class="upload-icon">📁</div>
             <p><strong>Drop a video file here</strong> or click to browse</p>
@@ -603,7 +803,11 @@
         </div>
         
         <div id="results" class="results"></div>
+        </div>
+        <!-- End Transcribe Tab -->
         
+        <!-- History Tab -->
+        <div id="historyTab" class="tab-content" role="tabpanel" aria-labelledby="tabHistoryBtn" style="display:none;">
         <div class="history-section">
             <div class="history-header">
                 <h2>📚 Transcription History</h2>
@@ -617,6 +821,24 @@
             </div>
             <div id="history" class="history"></div>
         </div>
+        </div>
+        <!-- End History Tab -->
+        
+        <!-- Models Tab -->
+        <div id="modelsTab" class="tab-content" role="tabpanel" aria-labelledby="tabModelsBtn" style="display:none;">
+            <div class="models-header">
+                <h2>🧠 Model Management</h2>
+                <div class="models-disk-usage">
+                    Total Disk Usage: <strong id="modelsDiskUsage">Loading...</strong>
+                </div>
+            </div>
+            
+            <div id="modelsNotice"></div>
+            <div id="modelsList" class="models-list">
+                <div class="models-loading">🔄 Loading models...</div>
+            </div>
+        </div>
+        <!-- End Models Tab -->
     </div>
     
     <script>
@@ -715,9 +937,6 @@
         
         // Attach settings listeners
         attachSettingsListeners();
-        
-        // Load history when page loads
-        loadHistory();
         
         // Refresh history button
         document.getElementById('refreshHistory').addEventListener('click', loadHistory);
@@ -1300,6 +1519,256 @@
                 const paragraphEl = document.getElementById(`summary-paragraph-${jobId}`);
                 if (bulletsEl) bulletsEl.textContent = 'Failed to load summary';
                 if (paragraphEl) paragraphEl.textContent = 'Failed to load summary';
+            }
+        }
+        
+        // ========== TAB SWITCHING ==========
+        function switchTab(tabName) {
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-selected', 'false');
+            });
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Activate selected tab
+            if (tabName === 'Transcribe') {
+                document.getElementById('tabTranscribeBtn').classList.add('active');
+                document.getElementById('tabTranscribeBtn').setAttribute('aria-selected', 'true');
+                document.getElementById('transcribeTab').style.display = 'block';
+            } else if (tabName === 'History') {
+                document.getElementById('tabHistoryBtn').classList.add('active');
+                document.getElementById('tabHistoryBtn').setAttribute('aria-selected', 'true');
+                document.getElementById('historyTab').style.display = 'block';
+                loadHistory(); // Load history when tab is opened
+            } else if (tabName === 'Models') {
+                document.getElementById('tabModelsBtn').classList.add('active');
+                document.getElementById('tabModelsBtn').setAttribute('aria-selected', 'true');
+                document.getElementById('modelsTab').style.display = 'block';
+                loadModels(); // Load models when tab is opened
+            }
+        }
+        
+        // Attach tab click handlers
+        document.getElementById('tabTranscribeBtn').addEventListener('click', () => switchTab('Transcribe'));
+        document.getElementById('tabHistoryBtn').addEventListener('click', () => switchTab('History'));
+        document.getElementById('tabModelsBtn').addEventListener('click', () => switchTab('Models'));
+        
+        // ========== MODEL MANAGEMENT ==========
+        let modelDownloadPolls = {}; // Track active download polling intervals
+        
+        function bytesToHuman(bytes) {
+            if (bytes === null || bytes === undefined) return 'N/A';
+            const mb = bytes / (1024 * 1024);
+            if (mb < 1024) {
+                return `${mb.toFixed(1)} MB`;
+            }
+            const gb = mb / 1024;
+            return `${gb.toFixed(2)} GB`;
+        }
+        
+        async function loadModels() {
+            const modelsListEl = document.getElementById('modelsList');
+            const diskUsageEl = document.getElementById('modelsDiskUsage');
+            const noticeEl = document.getElementById('modelsNotice');
+            
+            try {
+                modelsListEl.innerHTML = '<div class="models-loading">🔄 Loading models...</div>';
+                noticeEl.innerHTML = '';
+                
+                const response = await fetch('/api/models');
+                if (!response.ok) throw new Error('Failed to fetch models');
+                
+                const data = await response.json();
+                const models = data.models;
+                const totalSize = data.total_size_mb;
+                
+                // Update disk usage
+                diskUsageEl.textContent = `${totalSize} MB`;
+                
+                // Render models
+                modelsListEl.innerHTML = models.map(model => createModelCard(model)).join('');
+                
+                // Show info notice
+                noticeEl.innerHTML = `
+                    <div class="models-notice info">
+                        ℹ️ <strong>Note:</strong> The 'tiny' model cannot be deleted as it's the minimum required model. Downloads happen in the background.
+                    </div>
+                `;
+                
+            } catch (error) {
+                console.error('Failed to load models:', error);
+                modelsListEl.innerHTML = '';
+                noticeEl.innerHTML = `
+                    <div class="models-notice error">
+                        ❌ <strong>Error:</strong> Failed to load models. 
+                        <button class="btn btn-small" onclick="loadModels()" style="margin-left: 10px;">🔄 Retry</button>
+                    </div>
+                `;
+            }
+        }
+        
+        function createModelCard(model) {
+            const installed = model.installed;
+            const canDelete = model.can_delete;
+            const size = installed ? model.actual_size_mb : model.estimated_size_mb;
+            const sizeLabel = installed ? 'Disk Usage' : 'Download Size';
+            
+            return `
+                <div class="model-card" id="model-card-${model.name}">
+                    <div class="model-card-header">
+                        <div class="model-name">${model.name}</div>
+                        <span class="badge ${installed ? 'badge-success' : 'badge-muted'}">
+                            ${installed ? '✅ Installed' : '❌ Not Installed'}
+                        </span>
+                    </div>
+                    <div class="model-size">
+                        ${sizeLabel}: <strong>${size} MB</strong>
+                    </div>
+                    <div class="model-actions">
+                        ${!installed ? `
+                            <button class="btn-download" onclick="downloadModel('${model.name}')">
+                                ⬇️ Download
+                            </button>
+                        ` : ''}
+                        ${installed && canDelete ? `
+                            <button class="btn btn-delete" onclick="deleteModel('${model.name}')">
+                                🗑️ Delete
+                            </button>
+                        ` : ''}
+                        ${installed && !canDelete ? `
+                            <div class="model-status-text">🔒 Cannot be deleted (minimum required model)</div>
+                        ` : ''}
+                    </div>
+                    <div id="model-status-${model.name}"></div>
+                </div>
+            `;
+        }
+        
+        async function downloadModel(modelName) {
+            const card = document.getElementById(`model-card-${modelName}`);
+            const statusEl = document.getElementById(`model-status-${modelName}`);
+            const actionsEl = card.querySelector('.model-actions');
+            
+            try {
+                // Disable button
+                actionsEl.innerHTML = '<button class="btn-download" disabled>🔄 Starting...</button>';
+                
+                // Start download
+                const response = await fetch(`/api/models/${modelName}/download`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Download failed');
+                }
+                
+                const data = await response.json();
+                
+                if (data.status === 'already_installed') {
+                    statusEl.innerHTML = '<div class="model-status-text">✅ Model already installed</div>';
+                    setTimeout(() => loadModels(), 1000);
+                    return;
+                }
+                
+                // Start polling for download status
+                statusEl.innerHTML = `
+                    <div class="model-progress">
+                        <div class="model-progress-text">💼 Downloading...</div>
+                        <div class="progress-bar">
+                            <div id="model-progress-fill-${modelName}" class="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                `;
+                
+                pollDownloadStatus(modelName);
+                
+            } catch (error) {
+                console.error('Download failed:', error);
+                statusEl.innerHTML = `<div class="model-status-text" style="color: #dc3545;">❌ ${error.message}</div>`;
+                actionsEl.innerHTML = `<button class="btn-download" onclick="downloadModel('${modelName}')">⬇️ Retry</button>`;
+            }
+        }
+        
+        async function pollDownloadStatus(modelName) {
+            // Clear any existing poll for this model
+            if (modelDownloadPolls[modelName]) {
+                clearInterval(modelDownloadPolls[modelName]);
+            }
+            
+            const poll = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/models/${modelName}/status`);
+                    if (!response.ok) throw new Error('Failed to check status');
+                    
+                    const model = await response.json();
+                    
+                    if (model.installed) {
+                        // Download complete
+                        clearInterval(modelDownloadPolls[modelName]);
+                        delete modelDownloadPolls[modelName];
+                        
+                        const statusEl = document.getElementById(`model-status-${modelName}`);
+                        if (statusEl) {
+                            statusEl.innerHTML = '<div class="model-status-text" style="color: #28a745;">✅ Download complete!</div>';
+                        }
+                        
+                        // Reload models list after a short delay
+                        setTimeout(() => loadModels(), 1500);
+                    }
+                    
+                } catch (error) {
+                    console.error('Polling error:', error);
+                    clearInterval(modelDownloadPolls[modelName]);
+                    delete modelDownloadPolls[modelName];
+                }
+            }, 2000); // Poll every 2 seconds
+            
+            modelDownloadPolls[modelName] = poll;
+        }
+        
+        async function deleteModel(modelName) {
+            if (!confirm(`Delete model '${modelName}'? This will free up disk space.`)) {
+                return;
+            }
+            
+            const card = document.getElementById(`model-card-${modelName}`);
+            const statusEl = document.getElementById(`model-status-${modelName}`);
+            const actionsEl = card.querySelector('.model-actions');
+            
+            try {
+                // Show loading state
+                actionsEl.innerHTML = '<button class="btn btn-delete" disabled>🔄 Deleting...</button>';
+                
+                const response = await fetch(`/api/models/${modelName}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Delete failed');
+                }
+                
+                const data = await response.json();
+                
+                if (data.status === 'deleted') {
+                    statusEl.innerHTML = '<div class="model-status-text" style="color: #28a745;">✅ Model deleted successfully</div>';
+                    setTimeout(() => loadModels(), 1000);
+                } else {
+                    statusEl.innerHTML = '<div class="model-status-text">ℹ️ Model was not installed</div>';
+                    setTimeout(() => loadModels(), 1000);
+                }
+                
+            } catch (error) {
+                console.error('Delete failed:', error);
+                statusEl.innerHTML = `<div class="model-status-text" style="color: #dc3545;">❌ ${error.message}</div>`;
+                // Re-enable delete button
+                actionsEl.innerHTML = `<button class="btn btn-delete" onclick="deleteModel('${modelName}')">🗑️ Delete</button>`;
             }
         }
     </script>
