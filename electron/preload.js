@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, shell } = require('electron');
 
 /**
  * Expose safe API to renderer process via contextBridge
@@ -83,6 +83,26 @@ contextBridge.exposeInMainWorld('electronAPI', {
    * @returns {Promise<{success: boolean, offlineMode?: boolean, error?: string}>}
    */
   setOfflineMode: (offlineMode) => ipcRenderer.invoke('settings:setOfflineMode', offlineMode),
+
+  /**
+   * Get log file path and directory
+   * @returns {Promise<{logFile: string, logDir: string}>}
+   */
+  getLogPath: () => ipcRenderer.invoke('logs:getPath'),
+
+  /**
+   * Get recent log entries
+   * @param {number} lines - Number of recent lines to retrieve (default: 100)
+   * @returns {Promise<Array<object>>}
+   */
+  getRecentLogs: (lines) => ipcRenderer.invoke('logs:getRecent', lines),
+
+  /**
+   * Open a path in the system file explorer
+   * @param {string} path - Path to open
+   * @returns {Promise<string>} - Error string if failed
+   */
+  openPath: (path) => shell.openPath(path),
 
   /**
    * Subscribe to status updates from main process

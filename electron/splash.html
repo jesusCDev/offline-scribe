@@ -277,6 +277,47 @@
         input:checked + .toggle-slider:before {
             transform: translateX(26px);
         }
+
+        /* Logs Section */
+        .logs-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ecf0f1;
+        }
+
+        .logs-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 8px 0;
+        }
+
+        .logs-title {
+            font-size: 12px;
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+
+        .logs-path {
+            font-size: 10px;
+            color: #95a5a6;
+            margin-top: 4px;
+            word-break: break-all;
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 4px;
+            border: 1px solid #ecf0f1;
+            background: white;
+            cursor: pointer;
+        }
+
+        .btn-small:hover {
+            background: #ecf0f1;
+        }
     </style>
 </head>
 <body>
@@ -336,6 +377,17 @@
             </div>
         </div>
 
+        <!-- Logs Section -->
+        <div class="logs-section">
+            <div class="logs-header">
+                <div>
+                    <div class="logs-title">📋 Application Logs</div>
+                    <div id="logPath" class="logs-path">Loading...</div>
+                </div>
+                <button id="openLogsBtn" class="btn-small">Open Folder</button>
+            </div>
+        </div>
+
         <!-- System Info -->
         <div id="systemInfo" class="system-info"></div>
     </div>
@@ -354,6 +406,24 @@
             // Load offline mode setting
             const offlineSetting = await window.electronAPI.getOfflineMode();
             document.getElementById('offlineModeToggle').checked = offlineSetting.offlineMode;
+            
+            // Load log path
+            try {
+                const logInfo = await window.electronAPI.getLogPath();
+                document.getElementById('logPath').textContent = logInfo.logFile || 'Not available';
+                
+                // Open logs folder button
+                document.getElementById('openLogsBtn').addEventListener('click', async () => {
+                    try {
+                        await window.electronAPI.openPath(logInfo.logDir);
+                    } catch (error) {
+                        console.error('Failed to open logs folder:', error);
+                    }
+                });
+            } catch (error) {
+                console.error('Failed to get log path:', error);
+                document.getElementById('logPath').textContent = 'Error loading log path';
+            }
             
             // Start initialization workflow
             await initializeApp();

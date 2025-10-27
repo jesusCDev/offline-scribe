@@ -2,6 +2,7 @@ const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const dockerManager = require('./docker-manager');
+const logger = require('./logger');
 
 // Global state
 let splashWindow = null;
@@ -193,18 +194,23 @@ function saveSettings() {
  */
 ipcMain.handle('docker:check', async () => {
   try {
+    logger.info('Checking Docker installation');
     const installed = await dockerManager.isDockerInstalled();
     if (!installed.installed) {
+      logger.warn('Docker not installed', installed);
       return { success: false, error: 'Docker is not installed', details: installed };
     }
 
     const running = await dockerManager.isDockerRunning();
     if (!running.running) {
+      logger.warn('Docker not running', running);
       return { success: false, error: 'Docker is not running', details: running };
     }
 
+    logger.info('Docker check successful');
     return { success: true, details: { installed, running } };
   } catch (error) {
+    logger.error('Docker check failed', { error: error.message });
     return { success: false, error: error.message };
   }
 });
@@ -348,6 +354,7 @@ ipcMain.handle('image:build', async () => {
  */
 ipcMain.handle('container:start', async () => {
   try {
+    logger.info('Starting container', { offlineMode: settings.offlineMode });
     sendStatus('starting-container', 'Starting container...', 0);
     
     const dataPath = getDataPath();
@@ -356,6 +363,7 @@ ipcMain.handle('container:start', async () => {
       dataPath,
       offlineMode: settings.offlineMode
     });
+    logger.docker('start container', result, { port: result.port });
     
     if (!result.success) {
       return result;
@@ -445,10 +453,28 @@ ipcMain.handle('settings:getOfflineMode', async () => {
 });
 
 /**
+ * Get log file path
+ */
+ipcMain.handle('logs:getPath', async () => {
+  return {
+    logFile: logger.getLogPath(),
+    logDir: logger.getLogDir()
+  };
+});
+
+/**
+ * Get recent logs
+ */
+ipcMain.handle('logs:getRecent', async (event, lines = 100) => {
+  return logger.readRecentLogs(lines);
+});
+
+/**
  * Set offline mode setting and restart container
  */
 ipcMain.handle('settings:setOfflineMode', async (event, offlineMode) => {
   try {
+    logger.info('Offline mode changed', { from: settings.offlineMode, to: offlineMode });
     settings.offlineMode = offlineMode;
     saveSettings();
     
@@ -499,7 +525,17 @@ ipcMain.handle('settings:setOfflineMode', async (event, offlineMode) => {
  * App ready - create splash window
  */
 app.whenReady().then(() => {
+  logger.init();
+  logger.info('Silent Scribe starting', {
+    version: app.getVersion(),
+    platform: process.platform,
+    arch: process.arch,
+    isPackaged: app.isPackaged
+  });
+  
   loadSettings();
+  logger.info('Settings loaded', settings);
+  
   createSplashWindow();
 });
 
@@ -525,9 +561,10 @@ app.on('activate', () => {
 /**
  * Before quit - cleanup
  */
-app.on('before-quit', async (event) => {
-  if (isQuitting) {
-    return;
+app.on('before-quit', () => {
+  isQuitting = true;
+  logger.info('Application quitting');
+});
   }
   
   event.preventDefault();
