@@ -69,7 +69,7 @@ ARG CACHEBUST=1
 # Only fetch tiny model by default to keep image small
 # Users can download additional models via the app's model management UI
 RUN cp -r /opt/models_local/* /opt/models/ 2>/dev/null || true && \
-    python3 /tmp/fetch_models.py --models tiny --skip-existing
+    python3 /tmp/fetch_models.py --models tiny --skip-existing --skip-optional
 
 # Stage 4: Final runtime image
 FROM python:3.11-slim

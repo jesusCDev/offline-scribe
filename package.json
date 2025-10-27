@@ -4,10 +4,6 @@
   "description": "A completely offline, air-gapped video-to-text transcription system with AI-powered summarization. Designed for sensitive data that requires maximum security with zero internet access.",
   "main": "electron/main.js",
   "private": true,
-  "directories": {
-    "doc": "docs",
-    "test": "tests"
-  },
   "scripts": {
     "dev": "NODE_ENV=development electron .",
     "start": "electron .",
