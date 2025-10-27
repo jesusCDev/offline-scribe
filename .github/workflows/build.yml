@@ -45,8 +45,9 @@ jobs:
       - name: Pull pre-built Docker image
         run: |
           echo "Pulling image from GitHub Container Registry..."
-          docker pull ${{ env.CONTAINER_REGISTRY }}/${{ github.repository }}:latest
-          docker tag ${{ env.CONTAINER_REGISTRY }}/${{ github.repository }}:latest ${{ env.IMAGE_NAME }}
+          REPO_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
+          docker pull ${{ env.CONTAINER_REGISTRY }}/${REPO_LOWER}:latest
+          docker tag ${{ env.CONTAINER_REGISTRY }}/${REPO_LOWER}:latest ${{ env.IMAGE_NAME }}
           docker images ${{ env.IMAGE_NAME }}
 
       - name: Verify image
