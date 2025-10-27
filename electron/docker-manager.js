@@ -307,10 +307,11 @@ async function resolvePort(preferredPort = DEFAULT_HOST_PORT) {
  * @param {object} options - Container options
  * @param {number} options.hostPort - Host port to bind
  * @param {string} options.dataPath - Path to data directory
+ * @param {boolean} options.offlineMode - Enable air-gapped mode (default: true)
  * @returns {Promise<{success: boolean, port?: number, error?: string}>}
  */
 async function startContainer(options = {}) {
-  const { hostPort = DEFAULT_HOST_PORT, dataPath = null } = options;
+  const { hostPort = DEFAULT_HOST_PORT, dataPath = null, offlineMode = true } = options;
   
   try {
     // Check current state
@@ -342,6 +343,15 @@ async function startContainer(options = {}) {
       const platform = process.platform;
       const volumeFlag = platform === 'linux' ? `${dataPath}:/data:z` : `${dataPath}:/data`;
       args.push('-v', volumeFlag);
+    }
+    
+    // Add environment variables for offline/online mode
+    if (offlineMode) {
+      args.push('-e', 'HF_HUB_OFFLINE=1');
+      args.push('-e', 'TRANSFORMERS_OFFLINE=1');
+    } else {
+      args.push('-e', 'HF_HUB_OFFLINE=0');
+      args.push('-e', 'TRANSFORMERS_OFFLINE=0');
     }
     
     // Add image name

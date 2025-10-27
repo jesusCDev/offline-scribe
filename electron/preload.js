@@ -72,6 +72,19 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSystemInfo: () => ipcRenderer.invoke('system:info'),
 
   /**
+   * Get offline mode setting
+   * @returns {Promise<{offlineMode: boolean}>}
+   */
+  getOfflineMode: () => ipcRenderer.invoke('settings:getOfflineMode'),
+
+  /**
+   * Set offline mode setting (will restart container if running)
+   * @param {boolean} offlineMode - Enable/disable offline mode
+   * @returns {Promise<{success: boolean, offlineMode?: boolean, error?: string}>}
+   */
+  setOfflineMode: (offlineMode) => ipcRenderer.invoke('settings:setOfflineMode', offlineMode),
+
+  /**
    * Subscribe to status updates from main process
    * @param {function} callback - Callback function to receive status updates
    * @returns {function} - Unsubscribe function

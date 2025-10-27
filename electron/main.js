@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, shell } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const dockerManager = require('./docker-manager');
 
 // Global state
@@ -7,6 +8,7 @@ let splashWindow = null;
 let mainWindow = null;
 let currentPort = null;
 let isQuitting = false;
+let settings = { offlineMode: true }; // Default to air-gapped mode
 
 // Determine if running in development mode
 const isDevelopment = process.env.NODE_ENV === 'development';
@@ -145,6 +147,40 @@ function getDataPath() {
   } else {
     // Packaged: use user data directory
     return path.join(app.getPath('userData'), 'data');
+  }
+}
+
+/**
+ * Get settings file path
+ */
+function getSettingsPath() {
+  return path.join(app.getPath('userData'), 'settings.json');
+}
+
+/**
+ * Load settings from file
+ */
+function loadSettings() {
+  try {
+    const settingsPath = getSettingsPath();
+    if (fs.existsSync(settingsPath)) {
+      const data = fs.readFileSync(settingsPath, 'utf8');
+      settings = { ...settings, ...JSON.parse(data) };
+    }
+  } catch (error) {
+    console.error('Failed to load settings:', error);
+  }
+}
+
+/**
+ * Save settings to file
+ */
+function saveSettings() {
+  try {
+    const settingsPath = getSettingsPath();
+    fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2), 'utf8');
+  } catch (error) {
+    console.error('Failed to save settings:', error);
   }
 }
 
@@ -317,7 +353,8 @@ ipcMain.handle('container:start', async () => {
     const dataPath = getDataPath();
     const result = await dockerManager.startContainer({
       hostPort: dockerManager.DEFAULT_HOST_PORT,
-      dataPath
+      dataPath,
+      offlineMode: settings.offlineMode
     });
     
     if (!result.success) {
@@ -400,6 +437,60 @@ ipcMain.handle('system:info', async () => {
   };
 });
 
+/**
+ * Get offline mode setting
+ */
+ipcMain.handle('settings:getOfflineMode', async () => {
+  return { offlineMode: settings.offlineMode };
+});
+
+/**
+ * Set offline mode setting and restart container
+ */
+ipcMain.handle('settings:setOfflineMode', async (event, offlineMode) => {
+  try {
+    settings.offlineMode = offlineMode;
+    saveSettings();
+    
+    // Check if container is running
+    const state = await dockerManager.getContainerState();
+    
+    if (state.state === 'running') {
+      // Stop current container
+      sendStatus('restarting', 'Restarting container with new settings...', 0);
+      await dockerManager.stopContainer();
+      
+      // Start with new settings
+      const dataPath = getDataPath();
+      const result = await dockerManager.startContainer({
+        hostPort: dockerManager.DEFAULT_HOST_PORT,
+        dataPath,
+        offlineMode: settings.offlineMode
+      });
+      
+      if (!result.success) {
+        return { success: false, error: result.error };
+      }
+      
+      currentPort = result.port;
+      
+      // Wait for HTTP to be ready
+      const appUrl = `http://localhost:${currentPort}`;
+      const ready = await dockerManager.waitForHttpReady(appUrl, 120000, 1000);
+      
+      if (!ready.ready) {
+        return { success: false, error: 'Service did not become ready after restart' };
+      }
+      
+      sendStatus('ready', 'Container restarted successfully', 100);
+    }
+    
+    return { success: true, offlineMode: settings.offlineMode };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+});
+
 // ============================================================================
 // App Lifecycle
 // ============================================================================
@@ -408,6 +499,7 @@ ipcMain.handle('system:info', async () => {
  * App ready - create splash window
  */
 app.whenReady().then(() => {
+  loadSettings();
   createSplashWindow();
 });
 
