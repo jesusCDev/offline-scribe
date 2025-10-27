@@ -17,7 +17,10 @@
     "postinstall": "electron-builder install-app-deps"
   },
   "keywords": ["transcription", "whisper", "air-gapped", "offline", "privacy", "security"],
-  "author": "",
+  "author": {
+    "name": "Silent Scribe",
+    "email": "dev@silent-scribe.local"
+  },
   "license": "MIT",
   "devDependencies": {
     "electron": "^33.4.11",
