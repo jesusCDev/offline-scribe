@@ -1528,6 +1528,17 @@
         
         // ========== TAB SWITCHING ==========
         function switchTab(tabName) {
+            // Check if downloads are in progress when leaving Models tab
+            const currentTab = document.querySelector('.tab-btn.active');
+            if (currentTab && currentTab.id === 'tabModelsBtn' && tabName !== 'Models') {
+                const activeDownloads = Object.keys(modelDownloadPolls).length;
+                if (activeDownloads > 0) {
+                    if (!confirm(`${activeDownloads} model download(s) in progress. Downloads will continue in the background. Continue?`)) {
+                        return; // Stay on current tab
+                    }
+                }
+            }
+            
             // Update tab buttons
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.classList.remove('active');
@@ -1562,8 +1573,21 @@
         document.getElementById('tabHistoryBtn').addEventListener('click', () => switchTab('History'));
         document.getElementById('tabModelsBtn').addEventListener('click', () => switchTab('Models'));
         
+        // Warn before leaving page if downloads are in progress
+        window.addEventListener('beforeunload', (e) => {
+            const activeDownloads = Object.keys(modelDownloadPolls).length;
+            if (activeDownloads > 0) {
+                const message = `${activeDownloads} model download(s) in progress. Downloads will be cancelled if you leave.`;
+                e.preventDefault();
+                e.returnValue = message;
+                return message;
+            }
+        });
+        
         // ========== MODEL MANAGEMENT ==========
         let modelDownloadPolls = {}; // Track active download polling intervals
+        let modelsLoaded = false; // Track if models have been loaded in this session
+        let modelsData = null; // Cache models data
         
         function bytesToHuman(bytes) {
             if (bytes === null || bytes === undefined) return 'N/A';
@@ -1575,19 +1599,33 @@
             return `${gb.toFixed(2)} GB`;
         }
         
-        async function loadModels() {
+        async function loadModels(forceRefresh = false) {
             const modelsListEl = document.getElementById('modelsList');
             const diskUsageEl = document.getElementById('modelsDiskUsage');
             const noticeEl = document.getElementById('modelsNotice');
             
+            // If already loaded and not forcing refresh, and no active downloads, just return
+            if (modelsLoaded && !forceRefresh && Object.keys(modelDownloadPolls).length === 0) {
+                return;
+            }
+            
+            // If there are active downloads, don't reload to preserve UI state
+            if (Object.keys(modelDownloadPolls).length > 0 && !forceRefresh) {
+                console.log('Skipping reload - downloads in progress');
+                return;
+            }
+            
             try {
-                modelsListEl.innerHTML = '<div class="models-loading">🔄 Loading models...</div>';
-                noticeEl.innerHTML = '';
+                if (!modelsLoaded || forceRefresh) {
+                    modelsListEl.innerHTML = '<div class="models-loading">🔄 Loading models...</div>';
+                    noticeEl.innerHTML = '';
+                }
                 
                 const response = await fetch('/api/models');
                 if (!response.ok) throw new Error('Failed to fetch models');
                 
                 const data = await response.json();
+                modelsData = data;
                 const models = data.models;
                 const totalSize = data.total_size_mb;
                 
@@ -1600,12 +1638,15 @@
                 // Update model select dropdown to disable unavailable models
                 updateModelSelectOptions(models);
                 
-                // Show info notice
+                // Show info notice with refresh button
                 noticeEl.innerHTML = `
                     <div class="models-notice info">
                         ℹ️ <strong>Note:</strong> Each model includes both engines (faster-whisper + whisper.cpp). The 'tiny' model cannot be deleted as it's the minimum required. Downloads may take several minutes depending on model size.
+                        <button class="btn btn-small" onclick="loadModels(true)" style="margin-left: 10px; float: right;">🔄 Refresh</button>
                     </div>
                 `;
+                
+                modelsLoaded = true;
                 
             } catch (error) {
                 console.error('Failed to load models:', error);
@@ -1613,7 +1654,7 @@
                 noticeEl.innerHTML = `
                     <div class="models-notice error">
                         ❌ <strong>Error:</strong> Failed to load models. 
-                        <button class="btn btn-small" onclick="loadModels()" style="margin-left: 10px;">🔄 Retry</button>
+                        <button class="btn btn-small" onclick="loadModels(true)" style="margin-left: 10px;">🔄 Retry</button>
                     </div>
                 `;
             }
@@ -1680,7 +1721,7 @@
                 
                 if (data.status === 'already_installed') {
                     statusEl.innerHTML = '<div class="model-status-text">✅ Model already installed</div>';
-                    setTimeout(() => loadModels(), 1000);
+                    setTimeout(() => loadModels(true), 1000);
                     return;
                 }
                 
@@ -1727,7 +1768,7 @@
                         }
                         
                         // Reload models list after a short delay
-                        setTimeout(() => loadModels(), 1500);
+                        setTimeout(() => loadModels(true), 1500);
                     }
                     
                 } catch (error) {
@@ -1766,10 +1807,10 @@
                 
                 if (data.status === 'deleted') {
                     statusEl.innerHTML = '<div class="model-status-text" style="color: #28a745;">✅ Model deleted successfully</div>';
-                    setTimeout(() => loadModels(), 1000);
+                    setTimeout(() => loadModels(true), 1000);
                 } else {
                     statusEl.innerHTML = '<div class="model-status-text">ℹ️ Model was not installed</div>';
-                    setTimeout(() => loadModels(), 1000);
+                    setTimeout(() => loadModels(true), 1000);
                 }
                 
             } catch (error) {
