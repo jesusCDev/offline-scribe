@@ -1927,11 +1927,17 @@
         
         // Load available models for dropdown on page load
         async function loadAvailableModelsForDropdown() {
+            console.log('Loading models for dropdown...');
             try {
                 const response = await fetch('/api/models');
-                if (!response.ok) return; // Silently fail on page load
+                console.log('Models API response status:', response.status);
+                if (!response.ok) {
+                    console.warn('Models API returned non-OK status, keeping default options');
+                    return; // Silently fail on page load
+                }
                 
                 const data = await response.json();
+                console.log('Models data received:', data);
                 updateModelSelectOptions(data.models);
             } catch (error) {
                 console.error('Failed to load models for dropdown:', error);
@@ -1941,8 +1947,12 @@
         
         // Update model select dropdown to show only installed models
         function updateModelSelectOptions(models) {
+            console.log('Updating model select options with:', models);
             const modelSelect = document.getElementById('model');
-            if (!modelSelect) return;
+            if (!modelSelect) {
+                console.error('Model select element not found!');
+                return;
+            }
             
             // Get current value
             const currentValue = modelSelect.value;
