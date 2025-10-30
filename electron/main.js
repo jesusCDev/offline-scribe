@@ -565,26 +565,6 @@ app.on('before-quit', () => {
   isQuitting = true;
   logger.info('Application quitting');
 });
-  }
-  
-  event.preventDefault();
-  isQuitting = true;
-  
-  console.log('Cleaning up before quit...');
-  
-  try {
-    // Stop container
-    const state = await dockerManager.getContainerState();
-    if (state.state === 'running') {
-      console.log('Stopping container...');
-      await dockerManager.stopContainer();
-    }
-  } catch (error) {
-    console.error('Error during cleanup:', error);
-  }
-  
-  app.exit(0);
-});
 
 /**
  * Handle uncaught exceptions
