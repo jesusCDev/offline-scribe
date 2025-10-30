@@ -1628,13 +1628,51 @@
             }
         }
         
+        // Debug: Log tabs existence
+        console.log('Tab buttons:', {
+            transcribe: document.getElementById('tabTranscribeBtn'),
+            history: document.getElementById('tabHistoryBtn'),
+            models: document.getElementById('tabModelsBtn')
+        });
+        
+        // Debug: Check if tab bar is visible
+        const tabBar = document.querySelector('.tab-bar');
+        if (tabBar) {
+            console.log('Tab bar found. Computed style:', {
+                display: window.getComputedStyle(tabBar).display,
+                visibility: window.getComputedStyle(tabBar).visibility,
+                height: tabBar.offsetHeight,
+                width: tabBar.offsetWidth
+            });
+        } else {
+            console.error('Tab bar not found!');
+        }
+        
         // Load offline mode status on page load
         loadOfflineModeStatus();
         
         // Attach tab click handlers
-        document.getElementById('tabTranscribeBtn').addEventListener('click', () => switchTab('Transcribe'));
-        document.getElementById('tabHistoryBtn').addEventListener('click', () => switchTab('History'));
-        document.getElementById('tabModelsBtn').addEventListener('click', () => switchTab('Models'));
+        const tabTranscribeBtn = document.getElementById('tabTranscribeBtn');
+        const tabHistoryBtn = document.getElementById('tabHistoryBtn');
+        const tabModelsBtn = document.getElementById('tabModelsBtn');
+        
+        if (tabTranscribeBtn) {
+            tabTranscribeBtn.addEventListener('click', () => switchTab('Transcribe'));
+        } else {
+            console.error('tabTranscribeBtn not found!');
+        }
+        
+        if (tabHistoryBtn) {
+            tabHistoryBtn.addEventListener('click', () => switchTab('History'));
+        } else {
+            console.error('tabHistoryBtn not found!');
+        }
+        
+        if (tabModelsBtn) {
+            tabModelsBtn.addEventListener('click', () => switchTab('Models'));
+        } else {
+            console.error('tabModelsBtn not found!');
+        }
         
         // Warn before leaving page if downloads are in progress
         window.addEventListener('beforeunload', (e) => {
