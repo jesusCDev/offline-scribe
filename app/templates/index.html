@@ -735,8 +735,8 @@
         <h1>🤫 Silent Scribe</h1>
         <p class="subtitle">Air-gapped video-to-text transcription</p>
         
-        <div class="info-box">
-            🔒 <strong>Offline Mode:</strong> This application runs completely offline with no internet access for maximum security.
+        <div id="offlineModeIndicator" class="info-box">
+            <span id="offlineModeIcon">🔒</span> <strong>Air-Gapped Mode:</strong> <span id="offlineModeStatus">Active - No internet access</span>
         </div>
         
         <!-- Tab Navigation -->
@@ -1596,6 +1596,40 @@
                 loadModels(); // Load models when tab is opened
             }
         }
+        
+        // Load offline mode status and update indicator
+        async function loadOfflineModeStatus() {
+            // Check if we're in Electron environment
+            if (window.electronAPI && window.electronAPI.getOfflineMode) {
+                try {
+                    const result = await window.electronAPI.getOfflineMode();
+                    updateOfflineModeIndicator(result.offlineMode);
+                } catch (error) {
+                    console.error('Failed to load offline mode status:', error);
+                }
+            }
+        }
+        
+        function updateOfflineModeIndicator(offlineMode) {
+            const indicator = document.getElementById('offlineModeIndicator');
+            const icon = document.getElementById('offlineModeIcon');
+            const status = document.getElementById('offlineModeStatus');
+            
+            if (offlineMode) {
+                indicator.style.background = '#fff3cd';
+                indicator.style.borderLeftColor = '#ffc107';
+                icon.textContent = '🔒';
+                status.textContent = 'Active - No internet access (models cannot be downloaded)';
+            } else {
+                indicator.style.background = '#d1ecf1';
+                indicator.style.borderLeftColor = '#0c5460';
+                icon.textContent = '🌐';
+                status.textContent = 'Disabled - Internet access enabled (you can download models from the Models tab)';
+            }
+        }
+        
+        // Load offline mode status on page load
+        loadOfflineModeStatus();
         
         // Attach tab click handlers
         document.getElementById('tabTranscribeBtn').addEventListener('click', () => switchTab('Transcribe'));
