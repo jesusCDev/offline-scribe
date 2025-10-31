@@ -90,6 +90,11 @@ function createMainWindow(port) {
   const appUrl = `http://localhost:${port}`;
   mainWindow.loadURL(appUrl);
 
+  // Open DevTools in development mode
+  if (isDevelopment) {
+    mainWindow.webContents.openDevTools();
+  }
+
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
   });
