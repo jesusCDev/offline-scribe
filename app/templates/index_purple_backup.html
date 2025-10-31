@@ -1,0 +1,2064 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silent Scribe - Video Transcription</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #1a1a1a;
+            padding: 40px 20px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #ffffff;
+            padding: 48px;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+        }
+        
+        h1 {
+            margin-bottom: 12px;
+            color: #1a1a1a;
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: -0.8px;
+        }
+        
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 40px;
+            font-size: 16px;
+            font-weight: 400;
+        }
+        
+        .upload-zone {
+            border: 2px dashed #d1d5db;
+            border-radius: 12px;
+            padding: 50px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+            background: #f9fafb;
+        }
+        
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: #667eea;
+            background: linear-gradient(135deg, #f0f4ff 0%, #f5f0ff 100%);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+        
+        .upload-zone.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            color: #95a5a6;
+            margin-bottom: 10px;
+        }
+        
+        #fileInput {
+            display: none;
+        }
+        
+        .settings {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .setting-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        label {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 13px;
+            color: #2c3e50;
+            cursor: help;
+        }
+        
+        [title] {
+            cursor: help;
+        }
+        
+        select, input[type="number"], input[type="text"] {
+            padding: 10px 14px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background: #ffffff;
+            font-weight: 500;
+        }
+        
+        select:hover, input[type="number"]:hover, input[type="text"]:hover {
+            border-color: #d1d5db;
+        }
+        
+        select:focus, input[type="number"]:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #ddd;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #3498db;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .slider-value {
+            display: inline-block;
+            margin-left: 8px;
+            font-weight: 600;
+            color: #3498db;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            background: linear-gradient(135deg, #5568d3 0%, #6a3e8f 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .status.show {
+            display: block;
+        }
+        
+        .status.processing {
+            background: #d4edff;
+            border-left: 4px solid #3498db;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #3498db;
+            transition: width 0.3s;
+        }
+        
+        .results {
+            margin-top: 20px;
+        }
+        
+        .result-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .download-links a {
+            display: inline-block;
+            margin-right: 10px;
+            padding: 6px 12px;
+            background: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        
+        .download-links a:hover {
+            background: #2980b9;
+        }
+        
+        .transcript-preview {
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+        
+        .history-section {
+            margin-top: 30px;
+            border-top: 2px solid #ecf0f1;
+            padding-top: 30px;
+        }
+        
+        .history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .history-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .search-box {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 250px;
+        }
+        
+        .history-item {
+            background: #f8f9fa;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s;
+        }
+        
+        .history-item.search-match {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            box-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+        }
+        
+        .history-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        
+        .history-item-header:hover {
+            background: #ecf0f1;
+            margin: -5px -10px 10px -10px;
+            padding: 5px 10px;
+            border-radius: 4px;
+        }
+        
+        .history-item-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .history-item-content {
+            display: block;
+        }
+        
+        .history-item-content.collapsed {
+            display: none;
+        }
+        
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            padding: 6px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+        
+        .btn-delete:hover {
+            background: #c82333;
+        }
+        
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+        
+        .btn-secondary {
+            background: #ffffff;
+            color: #374151;
+            border: 2px solid #e5e7eb;
+        }
+        
+        .btn-secondary:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+        }
+        
+        .collapse-icon {
+            transition: transform 0.3s;
+            display: inline-block;
+        }
+        
+        .collapse-icon.collapsed {
+            transform: rotate(-90deg);
+        }
+        
+        .format-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .format-tab {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            color: #7f8c8d;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+        }
+        
+        .format-tab:hover {
+            color: #3498db;
+        }
+        
+        .format-tab.active {
+            color: #3498db;
+            border-bottom-color: #3498db;
+        }
+        
+        .format-content {
+            display: none;
+        }
+        
+        .format-content.active {
+            display: block;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        
+        .checkbox-group label {
+            margin: 0;
+            cursor: pointer;
+        }
+        
+        .speaker-detection-box {
+            background: #e8f5e9;
+            border: 2px solid #4caf50;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+        
+        .speaker-detection-box input[type="checkbox"] {
+            width: 22px;
+            height: 22px;
+            cursor: pointer;
+            margin-top: 2px;
+        }
+        
+        .speaker-detection-content {
+            flex: 1;
+        }
+        
+        .speaker-detection-content label {
+            font-size: 15px;
+            font-weight: 600;
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 5px;
+            cursor: pointer;
+        }
+        
+        .speaker-detection-content .description {
+            font-size: 13px;
+            color: #5a6c7d;
+            line-height: 1.4;
+        }
+        
+        .btn-generate-summary {
+            background: #9c27b0;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .btn-generate-summary:hover:not(:disabled) {
+            background: #7b1fa2;
+        }
+        
+        .btn-generate-summary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .summary-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #ffffff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .summary-section {
+            margin-top: 15px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 4px;
+        }
+        
+        .summary-section h4 {
+            margin: 0 0 10px 0;
+            color: #9c27b0;
+            font-size: 14px;
+        }
+        
+        .summary-section .summary-text {
+            background: white;
+            padding: 12px;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            font-size: 13px;
+            line-height: 1.6;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            padding: 16px 20px;
+            margin-bottom: 32px;
+            border-radius: 12px;
+            font-size: 15px;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+            font-weight: 500;
+        }
+        
+        .info-box.offline-active {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border: 2px solid #ef4444;
+            animation: pulse-warning 2s ease-in-out infinite;
+        }
+        
+        .info-box.offline-inactive {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            border: 2px solid #3b82f6;
+        }
+        
+        @keyframes pulse-warning {
+            0%, 100% { box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2); }
+            50% { box-shadow: 0 4px 24px rgba(239, 68, 68, 0.4); }
+        }
+        
+        /* Tab Navigation */
+        .tab-bar {
+            display: flex;
+            gap: 4px;
+            border-bottom: 2px solid #e5e7eb;
+            margin-bottom: 32px;
+            background: #f9fafb;
+            padding: 4px;
+            border-radius: 12px;
+        }
+        
+        .tab-btn {
+            padding: 10px 20px;
+            background: #ffffff;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            color: #6b7280;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .tab-btn::before {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.2s ease;
+        }
+        
+        .tab-btn:hover {
+            color: #374151;
+            background: #f9fafb;
+            border-color: #d1d5db;
+            transform: translateY(-1px);
+        }
+        
+        .tab-btn.active {
+            color: #fff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+            border-color: transparent;
+        }
+        
+        .tab-btn.active::before {
+            width: 80%;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Model Management */
+        .models-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .models-header h2 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        
+        .models-disk-usage {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+        
+        .models-disk-usage strong {
+            color: #3498db;
+            font-size: 16px;
+        }
+        
+        .models-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .model-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+            transition: all 0.3s;
+        }
+        
+        .model-card:hover {
+            border-color: #3498db;
+            box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+        }
+        
+        .model-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .model-name {
+            font-size: 18px;
+            font-weight: 700;
+            color: #2c3e50;
+            text-transform: capitalize;
+        }
+        
+        .badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .badge-muted {
+            background: #e9ecef;
+            color: #6c757d;
+        }
+        
+        .model-size {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 15px;
+        }
+        
+        .model-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-download {
+            flex: 1;
+            background: #28a745;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        
+        .btn-download:hover:not(:disabled) {
+            background: #218838;
+        }
+        
+        .btn-download:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .model-status-text {
+            font-size: 13px;
+            color: #6c757d;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        .model-progress {
+            margin-top: 10px;
+        }
+        
+        .model-progress-text {
+            font-size: 13px;
+            color: #3498db;
+            margin-bottom: 5px;
+        }
+        
+        .downloading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 3px solid #e9ecef;
+            border-top-color: #3498db;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        
+        .progress-bar.indeterminate .progress-fill {
+            width: 100%;
+            background: linear-gradient(90deg, 
+                #3498db 0%, 
+                #5dade2 25%, 
+                #3498db 50%, 
+                #5dade2 75%, 
+                #3498db 100%);
+            background-size: 200% 100%;
+            animation: indeterminate-progress 1.5s linear infinite;
+        }
+        
+        @keyframes indeterminate-progress {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        
+        .models-notice {
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .models-notice.info {
+            background: #d1ecf1;
+            border-left: 4px solid #0c5460;
+            color: #0c5460;
+        }
+        
+        .models-notice.error {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .models-loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤫 Silent Scribe</h1>
+        <p class="subtitle">Air-gapped video-to-text transcription</p>
+        
+        <div id="offlineModeIndicator" class="info-box offline-active">
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <span id="offlineModeIcon" style="font-size: 24px;">🔒</span>
+                <div style="flex: 1;">
+                    <div style="font-weight: 700; font-size: 16px; margin-bottom: 4px;">Air-Gapped Mode Active</div>
+                    <div id="offlineModeStatus" style="font-size: 14px; opacity: 0.9;">No internet access - Models cannot be downloaded</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tab Navigation -->
+        <div class="tab-bar" role="tablist">
+            <button id="tabTranscribeBtn" class="tab-btn active" role="tab" aria-selected="true" aria-controls="transcribeTab">🎬 Transcribe</button>
+            <button id="tabHistoryBtn" class="tab-btn" role="tab" aria-selected="false" aria-controls="historyTab">📚 History</button>
+            <button id="tabModelsBtn" class="tab-btn" role="tab" aria-selected="false" aria-controls="modelsTab">🧠 Models</button>
+        </div>
+        
+        <!-- Transcribe Tab -->
+        <div id="transcribeTab" class="tab-content active" role="tabpanel" aria-labelledby="tabTranscribeBtn">
+        <div id="uploadZone" class="upload-zone">
+            <div class="upload-icon">📁</div>
+            <p><strong>Drop a video file here</strong> or click to browse</p>
+            <p style="font-size: 13px; color: #95a5a6; margin-top: 5px;">Supports MP4, MOV, MKV, AVI, and more</p>
+            <input type="file" id="fileInput" accept="video/*,audio/*">
+        </div>
+        
+        <div id="fileName" style="display: none; margin-bottom: 20px; padding: 16px; background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%); border: 2px solid #22c55e; border-radius: 12px; font-weight: 600; color: #15803d; font-size: 15px;"></div>
+        
+        <div class="setting-group" id="titleGroup" style="display: none; margin-bottom: 20px;">
+            <label for="transcriptionTitle">Transcription Title (Optional)</label>
+            <input type="text" id="transcriptionTitle" placeholder="e.g., Meeting with Team, Interview Notes, etc." style="width: 100%;">
+        </div>
+        
+        <div class="settings">
+            <div class="setting-group">
+                <label for="engine" title="Choose which AI engine to use for transcription">Engine</label>
+                <select id="engine" title="Faster Whisper: Better for most computers. Whisper.cpp: Faster on Mac computers with Apple chips.">
+                    <option value="faster-whisper">Faster Whisper</option>
+                    <option value="whisper.cpp">Whisper.cpp</option>
+                </select>
+            </div>
+            
+            <div class="setting-group">
+                <label for="model" title="Larger models are more accurate but slower. Smaller models are faster but less accurate.">Model Size</label>
+                <select id="model" title="Tiny: Very fast but less accurate. Small: Good balance (recommended). Large: Most accurate but slowest.">
+                    <option value="tiny">Tiny (fastest)</option>
+                    <option value="base">Base</option>
+                    <option value="small" selected>Small (recommended)</option>
+                    <option value="medium">Medium</option>
+                    <option value="large-v3">Large (best quality)</option>
+                </select>
+            </div>
+            
+            <div class="setting-group" id="computeTypeGroup">
+                <label for="computeType" title="How the computer processes the audio. Different settings trade speed for accuracy.">Compute Type</label>
+                <select id="computeType" title="int8: Best compatibility, fast. int8_float16: Better quality if supported. float32: Most precise but slowest.">
+                    <option value="int8" selected>int8 (recommended)</option>
+                    <option value="int8_float16">int8_float16</option>
+                    <option value="int16">int16</option>
+                    <option value="float32">float32 (most accurate)</option>
+                </select>
+            </div>
+            
+            <div class="setting-group">
+                <label for="threads" title="How many CPU cores to use. More threads = faster transcription, but may slow down other programs.">
+                    CPU Threads
+                    <span id="threadsValue" class="slider-value">4</span>
+                </label>
+                <input type="range" id="threads" value="4" min="1" max="32" step="1" title="Slide to choose how many CPU cores to use. Using all cores gives fastest results but may make your computer slower for other tasks.">
+            </div>
+            
+            <div class="setting-group">
+                <label for="language" title="What language is spoken in the video? Auto-detect works well in most cases.">Language</label>
+                <select id="language" title="Choose the spoken language or use Auto-detect to let the AI figure it out.">
+                    <option value="auto">Auto-detect</option>
+                    <option value="en">English</option>
+                    <option value="es">Spanish</option>
+                    <option value="fr">French</option>
+                    <option value="de">German</option>
+                    <option value="it">Italian</option>
+                    <option value="pt">Portuguese</option>
+                    <option value="zh">Chinese</option>
+                    <option value="ja">Japanese</option>
+                    <option value="ko">Korean</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="speaker-detection-box">
+            <input type="checkbox" id="diarization">
+            <div class="speaker-detection-content">
+                <label for="diarization">🎭 Speaker Detection</label>
+                <div class="description">
+                    Identify and distinguish multiple speakers in the audio. This feature is more accurate but uses significantly more CPU and memory, and takes 2-3x longer to process.
+                </div>
+            </div>
+        </div>
+        
+        <button id="transcribeBtn" class="btn btn-primary" disabled>Start Transcription</button>
+        
+        <div id="status" class="status">
+            <div id="statusText"></div>
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill" style="width: 0%"></div>
+            </div>
+            <div id="statusDetails" style="font-size: 13px; margin-top: 5px;"></div>
+        </div>
+        
+        <div id="results" class="results"></div>
+        </div>
+        <!-- End Transcribe Tab -->
+        
+        <!-- History Tab -->
+        <div id="historyTab" class="tab-content" role="tabpanel" aria-labelledby="tabHistoryBtn" style="display:none;">
+        <div class="history-section">
+            <div class="history-header">
+                <h2>📚 Transcription History</h2>
+                <div class="history-controls">
+                    <input type="text" id="searchHistory" class="search-box" placeholder="🔍 Search filename or content...">
+                    <button id="collapseAll" class="btn btn-small">📉 Collapse All</button>
+                    <button id="expandAll" class="btn btn-small">📈 Expand All</button>
+                    <button id="deleteAll" class="btn btn-delete btn-small">🗑️ Delete All</button>
+                    <button id="refreshHistory" class="btn btn-small">🔄 Refresh</button>
+                </div>
+            </div>
+            <div id="history" class="history"></div>
+        </div>
+        </div>
+        <!-- End History Tab -->
+        
+        <!-- Models Tab -->
+        <div id="modelsTab" class="tab-content" role="tabpanel" aria-labelledby="tabModelsBtn" style="display:none;">
+            <div class="models-header">
+                <h2>🧠 Model Management</h2>
+                <div class="models-disk-usage">
+                    Total Disk Usage: <strong id="modelsDiskUsage">Loading...</strong>
+                </div>
+            </div>
+            
+            <div id="modelsNotice"></div>
+            <div id="modelsList" class="models-list">
+                <div class="models-loading">🔄 Loading models...</div>
+            </div>
+        </div>
+        <!-- End Models Tab -->
+    </div>
+    
+    <script>
+        let selectedFile = null;
+        let currentJobId = null;
+        let pollingInterval = null;
+        
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const transcribeBtn = document.getElementById('transcribeBtn');
+        const status = document.getElementById('status');
+        const statusText = document.getElementById('statusText');
+        const statusDetails = document.getElementById('statusDetails');
+        const progressFill = document.getElementById('progressFill');
+        const results = document.getElementById('results');
+        const engine = document.getElementById('engine');
+        const computeTypeGroup = document.getElementById('computeTypeGroup');
+        const threadsSlider = document.getElementById('threads');
+        const threadsValue = document.getElementById('threadsValue');
+        
+        // Settings persistence
+        const SETTINGS_KEY = 'silentScribe.settings';
+        
+        function saveSettings() {
+            const settings = {
+                engine: document.getElementById('engine').value,
+                model: document.getElementById('model').value,
+                computeType: document.getElementById('computeType').value,
+                threads: document.getElementById('threads').value,
+                language: document.getElementById('language').value,
+                diarization: document.getElementById('diarization').checked
+            };
+            localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+        }
+        
+        function loadSettings() {
+            try {
+                const saved = localStorage.getItem(SETTINGS_KEY);
+                if (saved) {
+                    const settings = JSON.parse(saved);
+                    if (settings.engine) document.getElementById('engine').value = settings.engine;
+                    if (settings.model) document.getElementById('model').value = settings.model;
+                    if (settings.computeType) document.getElementById('computeType').value = settings.computeType;
+                    if (settings.threads) {
+                        document.getElementById('threads').value = settings.threads;
+                        threadsValue.textContent = settings.threads;
+                    }
+                    if (settings.language) document.getElementById('language').value = settings.language;
+                    if (settings.diarization !== undefined) document.getElementById('diarization').checked = settings.diarization;
+                }
+            } catch (error) {
+                console.error('Failed to load settings:', error);
+            }
+        }
+        
+        // Load config on page load
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                const config = await response.json();
+                
+                // Set threads slider min/max and default value
+                threadsSlider.min = config.defaults.min_threads;
+                threadsSlider.max = config.defaults.max_threads;
+                threadsSlider.value = config.defaults.threads;
+                threadsValue.textContent = config.defaults.threads;
+                
+                // Set language default to English
+                document.getElementById('language').value = config.defaults.language || 'en';
+                
+                // Load saved settings (will override defaults)
+                loadSettings();
+            } catch (error) {
+                console.error('Failed to load config:', error);
+            }
+        }
+        
+        // Save settings on change
+        function attachSettingsListeners() {
+            ['engine', 'model', 'computeType', 'threads', 'language', 'diarization'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('change', saveSettings);
+                }
+            });
+        }
+        
+        // Update threads value display
+        threadsSlider.addEventListener('input', (e) => {
+            threadsValue.textContent = e.target.value;
+        });
+        
+        // Load config when page loads
+        loadConfig();
+        
+        // Load available models and update dropdown
+        loadAvailableModelsForDropdown();
+        
+        // Attach settings listeners
+        attachSettingsListeners();
+        
+        // Refresh history button
+        document.getElementById('refreshHistory').addEventListener('click', loadHistory);
+        
+        // Search history
+        document.getElementById('searchHistory').addEventListener('input', filterHistory);
+        
+        // Collapse/Expand all
+        document.getElementById('collapseAll').addEventListener('click', () => toggleAllItems(true));
+        document.getElementById('expandAll').addEventListener('click', () => toggleAllItems(false));
+        
+        // Delete all
+        document.getElementById('deleteAll').addEventListener('click', deleteAllHistory);
+        
+        // Toggle compute type visibility based on engine
+        engine.addEventListener('change', () => {
+            computeTypeGroup.style.display = engine.value === 'faster-whisper' ? 'flex' : 'none';
+        });
+        
+        // Upload zone interactions
+        uploadZone.addEventListener('click', () => {
+            if (!uploadZone.classList.contains('disabled')) {
+                fileInput.click();
+            }
+        });
+        
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (!uploadZone.classList.contains('disabled')) {
+                uploadZone.classList.add('dragover');
+            }
+        });
+        
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('dragover');
+        });
+        
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('dragover');
+            if (!uploadZone.classList.contains('disabled') && e.dataTransfer.files.length > 0) {
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+        
+        function handleFileSelect(file) {
+            selectedFile = file;
+            fileName.textContent = `📄 ${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            fileName.style.display = 'block';
+            
+            // Show title input field
+            document.getElementById('titleGroup').style.display = 'flex';
+            
+            // Pre-fill with filename (without extension)
+            const titleInput = document.getElementById('transcriptionTitle');
+            const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, '');
+            titleInput.value = fileNameWithoutExt;
+            
+            transcribeBtn.disabled = false;
+        }
+        
+        transcribeBtn.addEventListener('click', startTranscription);
+        
+        async function startTranscription() {
+            if (!selectedFile) return;
+            
+            // Disable UI
+            transcribeBtn.disabled = true;
+            uploadZone.classList.add('disabled');
+            
+            // Show status
+            status.className = 'status show processing';
+            statusText.textContent = '⏳ Starting transcription...';
+            statusDetails.textContent = '';
+            progressFill.style.width = '0%';
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            
+            // Add custom title if provided
+            const customTitle = document.getElementById('transcriptionTitle').value.trim();
+            if (customTitle) {
+                formData.append('title', customTitle);
+            }
+            
+            formData.append('engine', document.getElementById('engine').value);
+            formData.append('model', document.getElementById('model').value);
+            formData.append('compute_type', document.getElementById('computeType').value);
+            formData.append('threads', document.getElementById('threads').value);
+            formData.append('language', document.getElementById('language').value);
+            formData.append('diarization', document.getElementById('diarization').checked ? 'true' : 'false');
+            formData.append('beam_size', '5');
+            formData.append('temperature', '0.0');
+            formData.append('vad_filter', 'true');
+            
+            try {
+                const response = await fetch('/api/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Upload failed');
+                }
+                
+                const data = await response.json();
+                currentJobId = data.job_id;
+                
+                // Start polling more frequently for better progress updates
+                pollingInterval = setInterval(checkJobStatus, 500);
+                checkJobStatus();
+                
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+        
+        async function checkJobStatus() {
+            if (!currentJobId) return;
+            
+            try {
+                const response = await fetch(`/api/jobs/${currentJobId}/status`);
+                const job = await response.json();
+                
+                progressFill.style.width = `${job.progress}%`;
+                
+                // Update status message based on progress
+                let statusMsg = '';
+                if (job.progress < 10) {
+                    statusMsg = '🎬 Extracting audio from video...';
+                } else if (job.progress < 15) {
+                    statusMsg = '🤖 Loading AI model...';
+                } else if (job.progress < 99) {
+                    statusMsg = `🎙️ Transcribing audio... ${job.progress}%`;
+                } else {
+                    statusMsg = '✨ Finalizing transcription...';
+                }
+                statusText.textContent = statusMsg;
+                statusDetails.textContent = `Engine: ${job.engine} | Model: ${job.model}`;
+                
+                if (job.status === 'completed') {
+                    clearInterval(pollingInterval);
+                    showSuccess(job);
+                } else if (job.status === 'failed') {
+                    clearInterval(pollingInterval);
+                    showError(job.error);
+                }
+                
+            } catch (error) {
+                clearInterval(pollingInterval);
+                showError('Failed to check status');
+            }
+        }
+        
+        function showSuccess(job) {
+            status.className = 'status show success';
+            statusText.textContent = '✅ Transcription completed!';
+            
+            // Display results
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'result-item';
+            
+            resultDiv.innerHTML = `
+                <div class="result-header">
+                    <strong>${job.filename}</strong>
+                    <span style="font-size: 13px; color: #7f8c8d;">${new Date(job.created_at).toLocaleString()}</span>
+                </div>
+                <div class="download-links">
+                    <a href="/api/jobs/${job.job_id}/result.txt" download>📄 Download TXT</a>
+                    <a href="/api/jobs/${job.job_id}/result.srt" download>📝 Download SRT</a>
+                    <a href="/api/jobs/${job.job_id}/result.vtt" download>📋 Download VTT</a>
+                </div>
+                <div id="preview-${job.job_id}" class="transcript-preview">Loading preview...</div>
+            `;
+            
+            results.innerHTML = '';
+            results.appendChild(resultDiv);
+            
+            // Load preview
+            loadPreview(job.job_id);
+            
+            // Re-enable UI
+            setTimeout(() => {
+                resetUI();
+            }, 2000);
+        }
+        
+        async function loadPreview(jobId) {
+            try {
+                const response = await fetch(`/api/jobs/${jobId}/result.txt`);
+                const text = await response.text();
+                document.getElementById(`preview-${jobId}`).textContent = text;
+            } catch (error) {
+                document.getElementById(`preview-${jobId}`).textContent = 'Failed to load preview';
+            }
+        }
+        
+        function showError(message) {
+            status.className = 'status show error';
+            statusText.textContent = `❌ Error: ${message}`;
+            statusDetails.textContent = '';
+            resetUI();
+        }
+        
+        function resetUI() {
+            transcribeBtn.disabled = false;
+            uploadZone.classList.remove('disabled');
+            selectedFile = null;
+            fileName.style.display = 'none';
+            document.getElementById('titleGroup').style.display = 'none';
+            document.getElementById('transcriptionTitle').value = '';
+            fileInput.value = '';
+            currentJobId = null;
+        }
+        
+        // Load transcription history
+        async function loadHistory() {
+            try {
+                const response = await fetch('/api/history?limit=10');
+                const jobs = await response.json();
+                
+                const historyDiv = document.getElementById('history');
+                
+                if (jobs.length === 0) {
+                    historyDiv.innerHTML = '<p style="color: #7f8c8d; text-align: center;">No transcriptions yet. Upload a video to get started!</p>';
+                    return;
+                }
+                
+                historyDiv.innerHTML = jobs.map(job => createHistoryItem(job)).join('');
+                
+                // Attach tab switching events
+                document.querySelectorAll('.format-tab').forEach(tab => {
+                    tab.addEventListener('click', switchFormat);
+                });
+                
+            } catch (error) {
+                console.error('Failed to load history:', error);
+            }
+        }
+        
+        function createHistoryItem(job) {
+            const date = new Date(job.created_at).toLocaleString();
+            const statusBadge = job.status === 'completed' ? '✅' : 
+                               job.status === 'failed' ? '❌' : '⏳';
+            
+            let content = `
+                <div class="history-item" data-job-id="${job.job_id}" data-filename="${job.filename.toLowerCase()}">
+                    <div class="history-item-header" onclick="toggleItem('${job.job_id}')">
+                        <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                            <span class="collapse-icon collapsed" id="icon-${job.job_id}">▼</span>
+                            <div>
+                                <strong>${statusBadge} ${job.filename}</strong>
+                                <div style="font-size: 12px; color: #7f8c8d; margin-top: 3px;">
+                                    ${date} | ${job.engine} | ${job.model}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="history-item-actions" onclick="event.stopPropagation()">
+                            <button class="btn-delete" onclick="deleteJob('${job.job_id}')">🗑️ Delete</button>
+                        </div>
+                    </div>
+                    <div class="history-item-content collapsed" id="content-${job.job_id}">
+            `;
+            
+            if (job.status === 'completed' && job.result_files) {
+                const hasSummary = job.summary && job.summary.status === 'completed';
+                const summaryProcessing = job.summary && job.summary.status === 'processing';
+                
+                content += `
+                    <div class="format-tabs">
+                        <button class="format-tab active" data-job-id="${job.job_id}" data-format="txt">📝 Text</button>
+                        <button class="format-tab" data-job-id="${job.job_id}" data-format="srt">🎬 SRT</button>
+                        <button class="format-tab" data-job-id="${job.job_id}" data-format="vtt">🎬 VTT</button>
+                        ${hasSummary ? `<button class="format-tab" data-job-id="${job.job_id}" data-format="summary">✨ Summary</button>` : ''}
+                    </div>
+                    <div class="format-content active" id="content-${job.job_id}-txt">
+                        <div class="download-links" style="margin-bottom: 10px;">
+                            <a href="/api/jobs/${job.job_id}/result.txt" download>⬇️ Download TXT</a>
+                            ${!hasSummary && !summaryProcessing ? `
+                                <button class="btn-generate-summary" id="summary-btn-${job.job_id}" onclick="generateSummary('${job.job_id}')">
+                                    ✨ Generate Summary
+                                </button>
+                            ` : ''}
+                            ${summaryProcessing ? `
+                                <button class="btn-generate-summary" disabled>
+                                    <span class="summary-spinner"></span> Generating Summary...
+                                </button>
+                            ` : ''}
+                        </div>
+                        <div class="transcript-preview" id="preview-${job.job_id}-txt">Loading...</div>
+                    </div>
+                    <div class="format-content" id="content-${job.job_id}-srt">
+                        <div class="download-links" style="margin-bottom: 10px;">
+                            <a href="/api/jobs/${job.job_id}/result.srt" download>⬇️ Download SRT</a>
+                        </div>
+                        <div class="transcript-preview" id="preview-${job.job_id}-srt">Loading...</div>
+                    </div>
+                    <div class="format-content" id="content-${job.job_id}-vtt">
+                        <div class="download-links" style="margin-bottom: 10px;">
+                            <a href="/api/jobs/${job.job_id}/result.vtt" download>⬇️ Download VTT</a>
+                        </div>
+                        <div class="transcript-preview" id="preview-${job.job_id}-vtt">Loading...</div>
+                    </div>
+                `;
+                
+                // Add summary tab content if available
+                if (hasSummary) {
+                    content += `
+                        <div class="format-content" id="content-${job.job_id}-summary">
+                            <div class="download-links" style="margin-bottom: 10px;">
+                                <a href="/api/jobs/${job.job_id}/summary_bullets.txt" download>⬇️ Download Bullets</a>
+                                <a href="/api/jobs/${job.job_id}/summary_paragraph.txt" download>⬇️ Download Paragraph</a>
+                            </div>
+                            <div class="summary-section">
+                                <h4>📌 Key Points</h4>
+                                <div class="summary-text" id="summary-bullets-${job.job_id}">Loading...</div>
+                            </div>
+                            <div class="summary-section">
+                                <h4>📄 Summary</h4>
+                                <div class="summary-text" id="summary-paragraph-${job.job_id}">Loading...</div>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Load summary content
+                    setTimeout(() => {
+                        loadSummaryContent(job.job_id);
+                    }, 100);
+                }
+                
+                // Load txt preview by default (for search) but keep collapsed
+                setTimeout(() => loadPreviewForFormat(job.job_id, 'txt', true), 100);
+            } else if (job.status === 'failed') {
+                content += `<p style="color: #dc3545; margin-top: 10px;">⚠️ Error: ${job.error || 'Unknown error'}</p>`;
+            }
+            
+            content += `
+                    </div>
+                </div>
+            `;
+            return content;
+        }
+        
+        function switchFormat(e) {
+            const tab = e.target;
+            const jobId = tab.dataset.jobId;
+            const format = tab.dataset.format;
+            
+            // Update tabs
+            document.querySelectorAll(`[data-job-id="${jobId}"]`).forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            
+            // Update content
+            document.querySelectorAll(`[id^="content-${jobId}-"]`).forEach(c => c.classList.remove('active'));
+            document.getElementById(`content-${jobId}-${format}`).classList.add('active');
+            
+            // Load preview if not already loaded
+            const preview = document.getElementById(`preview-${jobId}-${format}`);
+            if (preview.textContent === 'Loading...') {
+                loadPreviewForFormat(jobId, format);
+            }
+        }
+        
+        async function loadPreviewForFormat(jobId, format, forSearch = false) {
+            try {
+                const response = await fetch(`/api/jobs/${jobId}/result.${format}`);
+                const text = await response.text();
+                const preview = document.getElementById(`preview-${jobId}-${format}`);
+                
+                // Store full text for search
+                if (forSearch && format === 'txt') {
+                    const item = document.querySelector(`[data-job-id="${jobId}"]`);
+                    if (item) item.dataset.content = text.toLowerCase();
+                }
+                
+                // Limit preview to first 1000 characters
+                const truncated = text.length > 1000 ? text.substring(0, 1000) + '\n\n... (truncated, download for full content)' : text;
+                preview.textContent = truncated;
+            } catch (error) {
+                document.getElementById(`preview-${jobId}-${format}`).textContent = 'Failed to load preview';
+            }
+        }
+        
+        // Toggle individual item
+        function toggleItem(jobId) {
+            const content = document.getElementById(`content-${jobId}`);
+            const icon = document.getElementById(`icon-${jobId}`);
+            
+            if (content.classList.contains('collapsed')) {
+                content.classList.remove('collapsed');
+                icon.classList.remove('collapsed');
+            } else {
+                content.classList.add('collapsed');
+                icon.classList.add('collapsed');
+            }
+        }
+        
+        // Toggle all items
+        function toggleAllItems(collapse) {
+            document.querySelectorAll('.history-item-content').forEach(content => {
+                const jobId = content.id.replace('content-', '');
+                const icon = document.getElementById(`icon-${jobId}`);
+                
+                if (collapse) {
+                    content.classList.add('collapsed');
+                    if (icon) icon.classList.add('collapsed');
+                } else {
+                    content.classList.remove('collapsed');
+                    if (icon) icon.classList.remove('collapsed');
+                }
+            });
+        }
+        
+        // Filter history by filename and content (fuzzy search)
+        function filterHistory() {
+            const searchTerm = document.getElementById('searchHistory').value.toLowerCase();
+            
+            if (!searchTerm) {
+                // Show all and remove highlights if search is empty
+                document.querySelectorAll('.history-item').forEach(item => {
+                    item.style.display = 'block';
+                    item.classList.remove('search-match');
+                });
+                return;
+            }
+            
+            // Split search term into words for fuzzy matching
+            const searchWords = searchTerm.split(/\s+/).filter(w => w);
+            
+            document.querySelectorAll('.history-item').forEach(item => {
+                const filename = item.dataset.filename || '';
+                const content = item.dataset.content || '';
+                const combinedText = filename + ' ' + content;
+                
+                // Check if all search words appear in filename or content
+                const matches = searchWords.every(word => combinedText.includes(word));
+                
+                if (matches) {
+                    item.style.display = 'block';
+                    item.classList.add('search-match');
+                } else {
+                    item.style.display = 'none';
+                    item.classList.remove('search-match');
+                }
+            });
+        }
+        
+        // Delete a single job
+        async function deleteJob(jobId) {
+            if (!confirm('Are you sure you want to delete this transcription?')) return;
+            
+            try {
+                const response = await fetch(`/api/jobs/${jobId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    // Remove from UI
+                    const item = document.querySelector(`[data-job-id="${jobId}"]`);
+                    if (item) item.remove();
+                    
+                    // Reload if no items left
+                    if (document.querySelectorAll('.history-item').length === 0) {
+                        loadHistory();
+                    }
+                } else {
+                    alert('Failed to delete transcription');
+                }
+            } catch (error) {
+                console.error('Delete failed:', error);
+                alert('Failed to delete transcription');
+            }
+        }
+        
+        // Delete all history
+        async function deleteAllHistory() {
+            if (!confirm('Are you sure you want to delete ALL transcriptions? This cannot be undone!')) return;
+            
+            try {
+                const response = await fetch('/api/jobs', {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadHistory();
+                } else {
+                    alert('Failed to delete all transcriptions');
+                }
+            } catch (error) {
+                console.error('Delete all failed:', error);
+                alert('Failed to delete all transcriptions');
+            }
+        }
+        
+        // Generate summary for a job
+        async function generateSummary(jobId) {
+            const button = document.getElementById(`summary-btn-${jobId}`);
+            if (!button) return;
+            
+            // Disable button and show spinner
+            button.disabled = true;
+            button.innerHTML = '<span class="summary-spinner"></span> Generating Summary...';
+            
+            try {
+                const response = await fetch(`/api/jobs/${jobId}/summarize`, {
+                    method: 'POST'
+                });
+                
+                if (response.status === 409) {
+                    alert('System is busy with another task. Please try again in a moment.');
+                    button.disabled = false;
+                    button.innerHTML = '✨ Generate Summary';
+                    return;
+                }
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to start summarization');
+                }
+                
+                const data = await response.json();
+                
+                if (data.status === 'completed') {
+                    // Already completed, reload history
+                    loadHistory();
+                } else {
+                    // Poll for completion
+                    pollSummaryStatus(jobId);
+                }
+                
+            } catch (error) {
+                console.error('Failed to generate summary:', error);
+                alert(`Failed to generate summary: ${error.message}`);
+                button.disabled = false;
+                button.innerHTML = '✨ Generate Summary';
+            }
+        }
+        
+        // Poll summary status
+        async function pollSummaryStatus(jobId) {
+            const pollInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/jobs/${jobId}/status`);
+                    const job = await response.json();
+                    
+                    if (!job.summary) {
+                        clearInterval(pollInterval);
+                        return;
+                    }
+                    
+                    if (job.summary.status === 'completed') {
+                        clearInterval(pollInterval);
+                        // Reload history to show summary tab
+                        loadHistory();
+                    } else if (job.summary.status === 'error') {
+                        clearInterval(pollInterval);
+                        alert(`Summary generation failed: ${job.summary.error || 'Unknown error'}`);
+                        loadHistory();
+                    }
+                    
+                } catch (error) {
+                    console.error('Failed to poll summary status:', error);
+                    clearInterval(pollInterval);
+                }
+            }, 1000); // Poll every second
+        }
+        
+        // Load summary content
+        async function loadSummaryContent(jobId) {
+            try {
+                // Load bullets
+                const bulletsResponse = await fetch(`/api/jobs/${jobId}/summary_bullets.txt`);
+                if (bulletsResponse.ok) {
+                    const bulletsText = await bulletsResponse.text();
+                    const bulletsEl = document.getElementById(`summary-bullets-${jobId}`);
+                    if (bulletsEl) bulletsEl.textContent = bulletsText;
+                }
+                
+                // Load paragraph
+                const paragraphResponse = await fetch(`/api/jobs/${jobId}/summary_paragraph.txt`);
+                if (paragraphResponse.ok) {
+                    const paragraphText = await paragraphResponse.text();
+                    const paragraphEl = document.getElementById(`summary-paragraph-${jobId}`);
+                    if (paragraphEl) paragraphEl.textContent = paragraphText;
+                }
+                
+            } catch (error) {
+                console.error('Failed to load summary content:', error);
+                const bulletsEl = document.getElementById(`summary-bullets-${jobId}`);
+                const paragraphEl = document.getElementById(`summary-paragraph-${jobId}`);
+                if (bulletsEl) bulletsEl.textContent = 'Failed to load summary';
+                if (paragraphEl) paragraphEl.textContent = 'Failed to load summary';
+            }
+        }
+        
+        // ========== TAB SWITCHING ==========
+        function switchTab(tabName) {
+            // Check if downloads are in progress when leaving Models tab
+            const currentTab = document.querySelector('.tab-btn.active');
+            if (currentTab && currentTab.id === 'tabModelsBtn' && tabName !== 'Models') {
+                const activeDownloads = Object.keys(modelDownloadPolls).length;
+                if (activeDownloads > 0) {
+                    if (!confirm(`${activeDownloads} model download(s) in progress. Downloads will continue in the background. Continue?`)) {
+                        return; // Stay on current tab
+                    }
+                }
+            }
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.setAttribute('aria-selected', 'false');
+            });
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            // Activate selected tab
+            if (tabName === 'Transcribe') {
+                document.getElementById('tabTranscribeBtn').classList.add('active');
+                document.getElementById('tabTranscribeBtn').setAttribute('aria-selected', 'true');
+                document.getElementById('transcribeTab').style.display = 'block';
+            } else if (tabName === 'History') {
+                document.getElementById('tabHistoryBtn').classList.add('active');
+                document.getElementById('tabHistoryBtn').setAttribute('aria-selected', 'true');
+                document.getElementById('historyTab').style.display = 'block';
+                loadHistory(); // Load history when tab is opened
+            } else if (tabName === 'Models') {
+                document.getElementById('tabModelsBtn').classList.add('active');
+                document.getElementById('tabModelsBtn').setAttribute('aria-selected', 'true');
+                document.getElementById('modelsTab').style.display = 'block';
+                loadModels(); // Load models when tab is opened
+            }
+        }
+        
+        // Load offline mode status and update indicator
+        async function loadOfflineModeStatus() {
+            // Check if we're in Electron environment
+            if (window.electronAPI && window.electronAPI.getOfflineMode) {
+                try {
+                    const result = await window.electronAPI.getOfflineMode();
+                    updateOfflineModeIndicator(result.offlineMode);
+                } catch (error) {
+                    console.error('Failed to load offline mode status:', error);
+                }
+            }
+        }
+        
+        function updateOfflineModeIndicator(offlineMode) {
+            const indicator = document.getElementById('offlineModeIndicator');
+            const icon = document.getElementById('offlineModeIcon');
+            const status = document.getElementById('offlineModeStatus');
+            const titleEl = status.previousElementSibling;
+            
+            if (offlineMode) {
+                indicator.className = 'info-box offline-active';
+                icon.textContent = '🔒';
+                titleEl.textContent = 'Air-Gapped Mode Active';
+                status.textContent = 'No internet access - Models cannot be downloaded';
+            } else {
+                indicator.className = 'info-box offline-inactive';
+                icon.textContent = '🌐';
+                titleEl.textContent = 'Internet Access Enabled';
+                status.textContent = 'You can download additional models from the Models tab';
+            }
+        }
+        
+        
+        // Load offline mode status on page load
+        loadOfflineModeStatus();
+        
+        // Attach tab click handlers
+        document.getElementById('tabTranscribeBtn')?.addEventListener('click', () => switchTab('Transcribe'));
+        document.getElementById('tabHistoryBtn')?.addEventListener('click', () => switchTab('History'));
+        document.getElementById('tabModelsBtn')?.addEventListener('click', () => switchTab('Models'));
+        
+        // Warn before leaving page if downloads are in progress
+        window.addEventListener('beforeunload', (e) => {
+            const activeDownloads = Object.keys(modelDownloadPolls).length;
+            if (activeDownloads > 0) {
+                const message = `${activeDownloads} model download(s) in progress. Downloads will be cancelled if you leave.`;
+                e.preventDefault();
+                e.returnValue = message;
+                return message;
+            }
+        });
+        
+        // ========== MODEL MANAGEMENT ==========
+        let modelDownloadPolls = {}; // Track active download polling intervals
+        let modelsLoaded = false; // Track if models have been loaded in this session
+        let modelsData = null; // Cache models data
+        
+        function bytesToHuman(bytes) {
+            if (bytes === null || bytes === undefined) return 'N/A';
+            const mb = bytes / (1024 * 1024);
+            if (mb < 1024) {
+                return `${mb.toFixed(1)} MB`;
+            }
+            const gb = mb / 1024;
+            return `${gb.toFixed(2)} GB`;
+        }
+        
+        async function loadModels(forceRefresh = false) {
+            const modelsListEl = document.getElementById('modelsList');
+            const diskUsageEl = document.getElementById('modelsDiskUsage');
+            const noticeEl = document.getElementById('modelsNotice');
+            
+            // If already loaded and not forcing refresh, and no active downloads, just return
+            if (modelsLoaded && !forceRefresh && Object.keys(modelDownloadPolls).length === 0) {
+                return;
+            }
+            
+            // If there are active downloads, don't reload to preserve UI state
+            if (Object.keys(modelDownloadPolls).length > 0 && !forceRefresh) {
+                console.log('Skipping reload - downloads in progress');
+                return;
+            }
+            
+            try {
+                if (!modelsLoaded || forceRefresh) {
+                    modelsListEl.innerHTML = '<div class="models-loading">🔄 Loading models...</div>';
+                    noticeEl.innerHTML = '';
+                }
+                
+                const response = await fetch('/api/models');
+                if (!response.ok) throw new Error('Failed to fetch models');
+                
+                const data = await response.json();
+                modelsData = data;
+                const models = data.models;
+                const totalSize = data.total_size_mb;
+                
+                // Update disk usage
+                diskUsageEl.textContent = `${totalSize} MB`;
+                
+                // Render models
+                modelsListEl.innerHTML = models.map(model => createModelCard(model)).join('');
+                
+                // Update model select dropdown to disable unavailable models
+                updateModelSelectOptions(models);
+                
+                // Show info notice with refresh button
+                noticeEl.innerHTML = `
+                    <div class="models-notice info">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+                            <div style="flex: 1;">
+                                ℹ️ <strong>Note:</strong> Each model includes both engines (faster-whisper + whisper.cpp). The 'tiny' model cannot be deleted as it's the minimum required. Downloads may take several minutes depending on model size.
+                            </div>
+                            <button class="btn btn-secondary btn-small" onclick="loadModels(true)" style="white-space: nowrap;">🔄 Refresh</button>
+                        </div>
+                    </div>
+                `;
+                
+                modelsLoaded = true;
+                
+            } catch (error) {
+                console.error('Failed to load models:', error);
+                modelsListEl.innerHTML = '';
+                noticeEl.innerHTML = `
+                    <div class="models-notice error">
+                        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px;">
+                            <div>❌ <strong>Error:</strong> Failed to load models.</div>
+                            <button class="btn btn-secondary btn-small" onclick="loadModels(true)">🔄 Retry</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        function createModelCard(model) {
+            const installed = model.installed;
+            const canDelete = model.can_delete;
+            const size = installed ? model.actual_size_mb : model.estimated_size_mb;
+            const sizeLabel = installed ? 'Disk Usage' : 'Download Size';
+            
+            return `
+                <div class="model-card" id="model-card-${model.name}">
+                    <div class="model-card-header">
+                        <div class="model-name">${model.name}</div>
+                        <span class="badge ${installed ? 'badge-success' : 'badge-muted'}">
+                            ${installed ? '✅ Installed' : '❌ Not Installed'}
+                        </span>
+                    </div>
+                    <div class="model-size">
+                        ${sizeLabel}: <strong>${size} MB</strong>
+                        ${!installed ? '<div style="font-size: 12px; color: #6c757d; margin-top: 4px;">Includes both faster-whisper & whisper.cpp</div>' : ''}
+                    </div>
+                    <div class="model-actions">
+                        ${!installed ? `
+                            <button class="btn-download" onclick="downloadModel('${model.name}')">
+                                ⬇️ Download Both Engines
+                            </button>
+                        ` : ''}
+                        ${installed && canDelete ? `
+                            <button class="btn btn-delete btn-small" onclick="deleteModel('${model.name}')">
+                                🗑️ Delete
+                            </button>
+                        ` : ''}
+                        ${installed && !canDelete ? `
+                            <div class="model-status-text">🔒 Required (cannot delete)</div>
+                        ` : ''}
+                    </div>
+                    <div id="model-status-${model.name}"></div>
+                </div>
+            `;
+        }
+        
+        async function downloadModel(modelName) {
+            const card = document.getElementById(`model-card-${modelName}`);
+            const statusEl = document.getElementById(`model-status-${modelName}`);
+            const actionsEl = card.querySelector('.model-actions');
+            
+            try {
+                // Disable button
+                actionsEl.innerHTML = '<button class="btn-download" disabled>🔄 Starting...</button>';
+                
+                // Start download
+                const response = await fetch(`/api/models/${modelName}/download`, {
+                    method: 'POST'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Download failed');
+                }
+                
+                const data = await response.json();
+                
+                if (data.status === 'already_installed') {
+                    statusEl.innerHTML = '<div class="model-status-text">✅ Model already installed</div>';
+                    setTimeout(() => loadModels(true), 1000);
+                    return;
+                }
+                
+                // Start polling for download status
+                statusEl.innerHTML = `
+                    <div class="model-progress">
+                        <div class="model-progress-text">
+                            <span class="downloading-spinner"></span>
+                            Downloading both engines... This may take several minutes.
+                        </div>
+                        <div class="progress-bar indeterminate">
+                            <div class="progress-fill"></div>
+                        </div>
+                    </div>
+                `;
+                
+                pollDownloadStatus(modelName);
+                
+            } catch (error) {
+                console.error('Download failed:', error);
+                statusEl.innerHTML = `<div class="model-status-text" style="color: #dc3545;">❌ ${error.message}</div>`;
+                actionsEl.innerHTML = `<button class="btn-download" onclick="downloadModel('${modelName}')">⬇️ Retry</button>`;
+            }
+        }
+        
+        async function pollDownloadStatus(modelName) {
+            // Clear any existing poll for this model
+            if (modelDownloadPolls[modelName]) {
+                clearInterval(modelDownloadPolls[modelName]);
+            }
+            
+            const poll = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/models/${modelName}/status`);
+                    if (!response.ok) throw new Error('Failed to check status');
+                    
+                    const model = await response.json();
+                    
+                    if (model.installed) {
+                        // Download complete
+                        clearInterval(modelDownloadPolls[modelName]);
+                        delete modelDownloadPolls[modelName];
+                        
+                        const statusEl = document.getElementById(`model-status-${modelName}`);
+                        if (statusEl) {
+                            statusEl.innerHTML = '<div class="model-status-text" style="color: #28a745;">✅ Download complete!</div>';
+                        }
+                        
+                        // Reload models list after a short delay
+                        setTimeout(() => loadModels(true), 1500);
+                    }
+                    
+                } catch (error) {
+                    console.error('Polling error:', error);
+                    clearInterval(modelDownloadPolls[modelName]);
+                    delete modelDownloadPolls[modelName];
+                }
+            }, 2000); // Poll every 2 seconds
+            
+            modelDownloadPolls[modelName] = poll;
+        }
+        
+        async function deleteModel(modelName) {
+            if (!confirm(`Delete model '${modelName}'? This will free up disk space.`)) {
+                return;
+            }
+            
+            const card = document.getElementById(`model-card-${modelName}`);
+            const statusEl = document.getElementById(`model-status-${modelName}`);
+            const actionsEl = card.querySelector('.model-actions');
+            
+            try {
+                // Show loading state
+                actionsEl.innerHTML = '<button class="btn btn-delete" disabled>🔄 Deleting...</button>';
+                
+                const response = await fetch(`/api/models/${modelName}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Delete failed');
+                }
+                
+                const data = await response.json();
+                
+                if (data.status === 'deleted') {
+                    statusEl.innerHTML = '<div class="model-status-text" style="color: #28a745;">✅ Model deleted successfully</div>';
+                    setTimeout(() => loadModels(true), 1000);
+                } else {
+                    statusEl.innerHTML = '<div class="model-status-text">ℹ️ Model was not installed</div>';
+                    setTimeout(() => loadModels(true), 1000);
+                }
+                
+            } catch (error) {
+                console.error('Delete failed:', error);
+                statusEl.innerHTML = `<div class="model-status-text" style="color: #dc3545;">❌ ${error.message}</div>`;
+                // Re-enable delete button
+                actionsEl.innerHTML = `<button class="btn btn-delete btn-small" onclick="deleteModel('${modelName}')">🗑️ Delete</button>`;
+            }
+        }
+        
+        // Load available models for dropdown on page load
+        async function loadAvailableModelsForDropdown() {
+            try {
+                const response = await fetch('/api/models');
+                if (!response.ok) return; // Silently fail on page load
+                
+                const data = await response.json();
+                updateModelSelectOptions(data.models);
+            } catch (error) {
+                console.error('Failed to load models for dropdown:', error);
+                // Don't show error on page load, just keep default options
+            }
+        }
+        
+        // Update model select dropdown to show only installed models
+        function updateModelSelectOptions(models) {
+            const modelSelect = document.getElementById('model');
+            if (!modelSelect) return;
+            
+            // Get current value
+            const currentValue = modelSelect.value;
+            
+            // Clear and rebuild options
+            modelSelect.innerHTML = '';
+            
+            models.forEach(model => {
+                const option = document.createElement('option');
+                option.value = model.name;
+                
+                // Set text based on installation status
+                if (model.installed) {
+                    if (model.name === 'tiny') {
+                        option.textContent = `${model.name} (fastest)`;
+                    } else if (model.name === 'small') {
+                        option.textContent = `${model.name} (recommended)`;
+                    } else if (model.name === 'large-v3') {
+                        option.textContent = `${model.name} (best quality)`;
+                    } else {
+                        option.textContent = model.name;
+                    }
+                } else {
+                    option.textContent = `${model.name} - Not Downloaded`;
+                    option.disabled = true;
+                    option.style.color = '#999';
+                }
+                
+                modelSelect.appendChild(option);
+            });
+            
+            // Restore previous selection if still valid, otherwise select first installed
+            const currentOption = Array.from(modelSelect.options).find(opt => opt.value === currentValue && !opt.disabled);
+            if (currentOption) {
+                modelSelect.value = currentValue;
+            } else {
+                // Select first installed model
+                const firstInstalled = Array.from(modelSelect.options).find(opt => !opt.disabled);
+                if (firstInstalled) {
+                    modelSelect.value = firstInstalled.value;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
