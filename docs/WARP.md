@@ -194,6 +194,365 @@ asyncio.create_task(process_transcription(...))
   - `GET /api/jobs/<job_id>/result.<format>` - Download results
   - `GET /api/history` - List recent jobs
 
+## UI Development & Testing
+
+### Frontend Stack
+- **Location**: `app/templates/index.html` (single-file HTML/CSS/JS)
+- **Icons**: Lucide icons loaded via CDN (`https://unpkg.com/lucide@latest`)
+- **Styling**: CSS custom properties (CSS variables) for theming
+- **State Management**: Vanilla JavaScript with localStorage persistence
+
+### UI Update Workflow
+
+#### 1. Making Changes
+Edit `app/templates/index.html` directly. The file contains:
+- HTML structure
+- Embedded `<style>` block (CSS)
+- Embedded `<script>` block (JavaScript)
+
+#### 2. Building & Testing Changes
+**CRITICAL**: Docker caching can prevent UI updates from appearing. Always use `--no-cache` flag:
+
+```bash
+# Stop existing container
+docker stop silent-scribe
+docker rm silent-scribe
+
+# Rebuild image WITHOUT cache (forces UI changes to be picked up)
+docker build --no-cache -t silent-scribe:latest -f docker/Dockerfile .
+
+# Start fresh container
+docker run -d --name silent-scribe --network none -p 7860:7860 -v silent-scribe-data:/data silent-scribe:latest
+
+# Wait a few seconds for startup
+sleep 3
+
+# Verify container is running
+docker logs silent-scribe --tail 10
+
+# Test health endpoint
+curl -s http://localhost:7860/health | jq .
+```
+
+#### 3. Verification Checklist
+After rebuilding, **always** verify these before testing UI:
+
+```bash
+# 1. Check container is running
+docker ps | grep silent-scribe
+# Should show: STATUS = Up X seconds
+
+# 2. Verify health endpoint
+curl -s http://localhost:7860/health
+# Should return: {"status":"ok","summarization_available":false}
+
+# 3. Check frontend loads
+curl -s http://localhost:7860/ | head -n 20
+# Should return HTML with <!DOCTYPE html>
+
+# 4. Verify network isolation (air-gapped mode)
+docker inspect silent-scribe | grep -A 3 NetworkMode
+# Should show: "NetworkMode": "none"
+```
+
+#### 4. Browser Testing
+1. Open **http://localhost:7860** in browser
+2. **Hard refresh** to bypass browser cache:
+   - Chrome/Edge: `Ctrl+Shift+R` (Linux/Win) or `Cmd+Shift+R` (Mac)
+   - Firefox: `Ctrl+F5` or `Cmd+Shift+R`
+3. Check browser console (F12) for JavaScript errors
+4. Verify all UI elements render correctly
+
+### Common UI Testing Scenarios
+
+#### Test 1: Visual Appearance
+- [ ] Color scheme matches design (slate backgrounds, amber accents)
+- [ ] Typography is readable and properly sized
+- [ ] Spacing and padding look balanced
+- [ ] Icons load correctly (Lucide)
+- [ ] Hover effects work on buttons/tabs
+- [ ] Focus states visible on form inputs
+
+#### Test 2: File Upload
+- [ ] Click upload zone → file picker opens
+- [ ] Drag and drop file → border highlights
+- [ ] File selected → name and size display
+- [ ] Transcription title auto-fills with filename
+
+#### Test 3: Settings & Controls
+- [ ] Engine dropdown works (faster-whisper, whisper.cpp)
+- [ ] Model selection updates
+- [ ] Compute type visible only for faster-whisper
+- [ ] Threads slider updates value display
+- [ ] Language dropdown functional
+- [ ] Speaker detection checkbox toggles
+
+#### Test 4: Tab Navigation
+- [ ] Tabs switch correctly (Transcribe, History, Models)
+- [ ] Active tab visually distinct
+- [ ] Tab content loads properly
+- [ ] Back button works between tabs
+
+#### Test 5: Models Tab
+- [ ] Models list loads
+- [ ] Disk usage displays
+- [ ] Download buttons work (if offline mode off)
+- [ ] Delete buttons work (except tiny)
+- [ ] Badges show correct install status
+
+#### Test 6: History Tab
+- [ ] History loads past transcriptions
+- [ ] Search filters by filename/content
+- [ ] Collapse/Expand all works
+- [ ] Format tabs (TXT/SRT/VTT) switch
+- [ ] Download links work
+- [ ] Delete individual items works
+
+#### Test 7: Transcription Flow
+- [ ] Upload file → settings persist from localStorage
+- [ ] Start transcription → progress bar animates
+- [ ] Status messages update during processing
+- [ ] Completion → results display
+- [ ] Download links functional
+- [ ] Preview shows transcript text
+
+### Debug Tips
+
+#### UI Not Updating After Rebuild?
+**Cause**: Docker layer caching kept old `index.html`
+
+**Solution**:
+```bash
+# Force rebuild without cache
+docker build --no-cache -t silent-scribe:latest -f docker/Dockerfile .
+
+# Or clean everything and rebuild
+docker stop silent-scribe
+docker rm silent-scribe
+docker rmi silent-scribe:latest
+make build
+```
+
+#### Browser Shows Old UI?
+**Cause**: Browser cache
+
+**Solution**:
+1. Hard refresh: `Ctrl+Shift+R` (or `Cmd+Shift+R` on Mac)
+2. Clear browser cache completely
+3. Try incognito/private window
+
+#### Icons Not Showing?
+**Cause**: Lucide CDN not loading or icons not initialized
+
+**Solution**:
+1. Check browser console for network errors
+2. Verify `<script src="https://unpkg.com/lucide@latest"></script>` in HTML head
+3. Confirm `lucide.createIcons()` called in JavaScript
+4. Check air-gapped mode doesn't block CDN (it shouldn't for initial load)
+
+#### JavaScript Errors?
+**Cause**: Syntax error or undefined variable
+
+**Solution**:
+1. Open browser console (F12)
+2. Look for red error messages
+3. Check line numbers in `index.html` `<script>` section
+4. Verify all function definitions and variable declarations
+
+#### Settings Not Persisting?
+**Cause**: localStorage issues
+
+**Solution**:
+```javascript
+// Check in browser console
+localStorage.getItem('silentScribe.settings')
+
+// Clear if corrupted
+localStorage.removeItem('silentScribe.settings')
+
+// Verify settings save
+// (change a setting, refresh page, check if persisted)
+```
+
+### Performance Testing
+
+#### Page Load Speed
+```bash
+# Measure page load time
+curl -w "@-" -o /dev/null -s http://localhost:7860/ <<'EOF'
+    time_namelookup:  %{time_namelookup}s
+       time_connect:  %{time_connect}s
+    time_appconnect:  %{time_appconnect}s
+   time_pretransfer:  %{time_pretransfer}s
+      time_redirect:  %{time_redirect}s
+ time_starttransfer:  %{time_starttransfer}s
+                    ----------
+         time_total:  %{time_total}s
+EOF
+```
+
+#### Memory Usage
+```bash
+# Check container memory consumption
+docker stats silent-scribe --no-stream --format "table {{.Name}}\t{{.CPUPerc}}\t{{.MemUsage}}\t{{.MemPerc}}"
+```
+
+### Current UI Design (as of 2025-10-31)
+
+**Theme**: Professional light theme with slate/amber color scheme (recording studio aesthetic)
+
+**Design Philosophy**:
+- Clean, calm, professional appearance
+- No gradients or pulsing animations
+- Subtle hover states and transitions
+- Consistent spacing and border radius
+- Scalable SVG icons throughout
+
+**Color Palette** (CSS Custom Properties):
+```css
+--slate-900: #0f172a;  /* Primary text */
+--slate-800: #1e293b;
+--slate-700: #334155;  /* Secondary text */
+--slate-600: #475569;
+--slate-500: #64748b;  /* Muted text, inactive tabs */
+--slate-400: #94a3b8;
+--slate-300: #cbd5e1;  /* Borders */
+--slate-200: #e2e8f0;  /* Light borders */
+--slate-100: #f1f5f9;  /* Light backgrounds */
+--slate-50: #f8fafc;   /* Body background */
+
+--amber-600: #d97706;  /* Primary buttons, active tabs */
+--amber-500: #f59e0b;  /* Hover states, accents */
+--amber-400: #fbbf24;
+
+--red-600: #dc2626;    /* Delete buttons, errors */
+--green-600: #16a34a;  /* Success states */
+--blue-600: #2563eb;   /* Info states */
+```
+
+**Color Usage Guidelines**:
+- **Backgrounds**: White containers on slate-50 body, slate-50/100 for secondary surfaces
+- **Text**: Slate-900 for primary, slate-700 for labels, slate-500/600 for muted
+- **Borders**: Slate-200/300 for standard borders
+- **Primary Actions**: Amber-600 background, amber-500 on hover
+- **Secondary Actions**: White background with slate-300 border
+- **Destructive Actions**: Red-600 background
+- **Active States**: Amber-600 for tabs, slider thumbs, focus rings
+
+**Typography**:
+- Font stack: `-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif`
+- Heading: 36px, weight 700, slate-900
+- Subtitle: 16px, weight 400, slate-600
+- Body: 14-15px, slate-900
+- Labels: 13px, weight 600, slate-700
+
+**Spacing & Layout**:
+- Container: max-width 1000px, padding 48px, border-radius 12px
+- Buttons: padding 12px 24px (primary), 8px 16px (small)
+- Border radius: 6px (buttons, inputs), 8px (containers), 12px (main container)
+- Gap: 6px (inline icons), 12px (section spacing)
+
+**Icons System** (Lucide v0.x):
+- **CDN**: `https://unpkg.com/lucide@latest`
+- **License**: MIT
+- **Format**: SVG via `data-lucide` attributes
+- **Initialization**: `lucide.createIcons()` after DOM updates
+- **Sizing**: 14-16px (inline), 18-24px (headings), 36-48px (large displays)
+
+**Icon Usage Map**:
+```javascript
+// Branding & Navigation
+'mic-off'         → Silent Scribe logo
+'video'           → Transcribe tab
+'book-open'       → History tab
+'brain'           → Models tab
+
+// Actions
+'upload'          → File upload zone
+'download'        → Download links
+'trash-2'         → Delete actions
+'refresh-cw'      → Refresh/retry
+'sparkles'        → AI summary generation
+
+// Status & Indicators
+'check-circle'    → Success/completed/installed
+'x-circle'        → Error/failed/not installed
+'clock'           → Processing/pending
+'alert-circle'    → Warning/error message
+'lock'            → Air-gapped mode active
+'globe'           → Internet enabled
+
+// UI Controls
+'chevron-down'    → Expanded state
+'chevron-right'   → Collapsed state
+'chevrons-up'     → Collapse all
+'chevrons-down'   → Expand all
+
+// Content Types
+'file-text'       → Text format
+'file-video'      → Video file
+'film'            → SRT/VTT subtitle formats
+'list'            → Bullet points
+'users'           → Speaker detection
+
+// Processing
+'cpu'             → Model loading
+'mic'             → Transcribing audio
+'loader'          → Generic loading (with spin animation)
+'info'            → Information notice
+```
+
+**Animation Guidelines**:
+- Use `animation: spin 1s linear infinite` for loading indicators only
+- Transitions: 0.2s for UI interactions
+- Hover effects: `translateY(-1px)` for buttons
+- NO pulsing, NO gradients, NO complex animations
+
+**Tab Navigation Design**:
+- Transparent background, clean underline for active tab
+- Slate-500 inactive, amber-600 active
+- 2px bottom border on active tab
+- Icons inline with 6px gap
+
+**Button Variants**:
+```css
+/* Primary (amber) */
+background: var(--amber-600);
+hover: var(--amber-500) + translateY(-1px);
+
+/* Secondary (white) */
+background: white;
+border: 1px solid var(--slate-300);
+hover: var(--slate-50) background;
+
+/* Destructive (red) */
+background: var(--red-600);
+hover: #b91c1c + translateY(-1px);
+```
+
+**Form Controls**:
+- Inputs: 1px solid slate-300 border, 6px radius
+- Focus: amber-500 border + 3px rgba amber glow
+- Hover: slate-400 border
+- Range slider thumb: amber-500 circle, 18px
+
+**Key Features**:
+- Single-page application with tab navigation
+- Drag-and-drop file upload with amber hover state
+- Real-time progress tracking with amber progress bar
+- Format switching (TXT/SRT/VTT) with inline icons
+- Model management with download/delete
+- History with search, filtering, and collapse/expand
+- Settings persistence via localStorage
+- Responsive design (mobile-friendly)
+- All icons from Lucide library (scalable SVG)
+
+**Accessibility**:
+- ARIA labels on tabs and controls
+- Focus states visible on all interactive elements
+- Color contrast meets WCAG AA standards
+- Icon + text labels for clarity
+
 ## Important Constraints
 
 - **Single-process design**: Uvicorn runs with `--workers 1` to avoid concurrency issues
